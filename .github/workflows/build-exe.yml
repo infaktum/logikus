@@ -1,0 +1,81 @@
+name: Build Windows EXE
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        python-version: [ '3.11' ]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install "pygame>=2.0.0" pyinstaller
+          python -m pip install -e .\src\logikus
+
+      - name: Prepare release folder
+        shell: powershell
+        run: |
+          Remove-Item -Recurse -Force release -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path release | Out-Null
+
+      - name: Build EXE using PyInstaller spec file
+        shell: powershell
+        run: |
+          python -m PyInstaller --noconfirm --clean .\scripts\logikus.spec --distpath .\release --workpath .\build
+
+      - name: Copy runtime project files
+        shell: powershell
+        run: |
+          Copy-Item -Path .\projects -Destination .\release\projects -Recurse -Force
+
+      - name: Package release folder
+        shell: powershell
+        run: |
+          if (Test-Path .\release\Logikus.zip) { Remove-Item .\release\Logikus.zip -Force }
+          Compress-Archive -Path .\release\* -DestinationPath .\release\Logikus.zip -Force
+
+      - name: Verify release output
+        shell: powershell
+        run: |
+          Get-ChildItem .\release | Format-Table -AutoSize
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: logikus-release
+          path: release/**
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/Logikus.exe
+            release/Logikus.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

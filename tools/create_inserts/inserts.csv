@@ -1,0 +1,37 @@
+Input file name,Output file name,Text1,Text2,Text3,Text4,Text5,Text6,Text7,Text8,Text9,Text10,Size,Color
+#
+# First book
+#
+# Different inserts containing only digits
+empty.png,12345678910.png,1,2,3,4,5,6,7,8,9,10,80,(0-0-0) 
+empty.png,9876543210.png,9,8,7,6,5,4,3,2,1,0,80,(0-0-0)
+empty.png,0123456789.png,0,1,2,3,4,5,6,7,8,9,80,(0-0-0)
+empty.png,10123456789.png,10,1,2,3,4,5,6,7,8,9,80,(0-0-0)
+empty.png,23+x3=569.png,2,3,+,x,3,,=,5,6,9,80,(0-0-0)
+empty.png,berufe.png,,,BÜRGER-|MEISTER,,ARZT,,APO-|THEKER,,,,28,(0-0-0)
+empty.png,schulnoten.png,unge-|nügend,mangel-|haft,aus-|reichend,befrie-|digend,gut,sehr gut,,,,,32,(0-0-0)
+empty.png,flughafen.png,Flugkontingent|MÜNCHEN||ausgebucht!,Flugkontingent|STUTTGART||ausgebucht!,Flugkontingent|FRANKFURT||ausgebucht!,Flugkontingent|HAMBURG||ausgebucht!, , ,Flug nach|NEW YORK|| ausgebucht!, , ,Achtung!|Flug||überbucht! ,20,(0-0-0)
+empty.png,wetter.png,Luftdruck|steigt,Luftdruck|fällt,Luft-|feuchtigkeit|nimmt ab,Luft-|feuchtigkeit|nimmt zu,Luft-|temperatur|steigend,Luft-|temperatur|fallend ,Sommer,Winter,Wetter|wird|besser,Wetter|wird|schlechter,24,(0-0-0)
+empty.png,doktor.png,Katarr-|halische|Grippe,Bronchitis,Schnupfen,Gastritische|Grippe,Nervöse|Grippe,,Schwitzen,Bettruhe,Diät,Bestrahlung|nach|ärztlicher|Verordnung,22,(0-0-0)
+empty.png,pavlov.png,Lern-|vorgang||S 3 stellen!,Lern-|vorgang||S 4 stellen!,Lern-|vorgang||S 5 stellen!,Lern-|vorgang||S 6 stellen!,,,,,,Magensaft||fließt!,24,(0-0-0)
+RockPaperScissorsOhneText.png,RockPaperScissors.png,A|ist|Sieger,|||Schere,|||Stein,|||Papier,,Noch|einmal,|||Papier,|||Stein,|||Schere,B|ist|Sieger,40,(0-0-255)
+empty.png,_ziffern123.png,1,2,3,,,,,,,,80,(0-0-0)
+_ziffern123.png,gewinnspiel.png,,,,,,,,Bedaure.||Sie haben|verloren!,,Gratuliere.||Sie haben|gewonnen!,26,(0-0-0)
+empty.png,_orange.png,,,,ORANGE,,,,,,,30,(255-165-0)
+_orange.png,_green.png,,,,,GRÜN,,,,,,30,(45-150-90)
+_green.png,_violet.png,,,,,,VIOLETT,,,,,30,(170-130-255)
+_violet.png,colors.png,,,,,,,,BRAUN,,,30,(180-140-10)
+empty.png,translation.png,DER,DAS,JUNGE,MÄDCHEN,HAT,VIELE,RINGE,LÄUTET,DIE,GLOCKE,30,(0-0-0)
+empty.png,_ziffern123.png,1,2,3,,,,,,,,72,(0-0-0)
+_ziffern123.png,rechenspiel.png,,,,,,,,Bedaure||Sie haben|verloren!,,Gratuliere||Sie haben|gewonnen!,26,(0-0-0)
+empty.png,LLLL.png,,,,L,L,L,L,,,,80,(0-0-0)
+empty.png,LLLLLL.png,,,L,L,L,L,L,L,,,80,(0-0-0)
+#
+# Second book
+#
+empty.png,8100364925.png,8,1,0,0,3,6,4,9,2,5,80,(0-0-0) 
+empty.png,transprt.png,|Hamburg|------->,|Hannover|------->,|Dortmund|------->,|Frankfurt|------->,|Köln|------->,|Karlsruhe|------->,|Würzburg|------->,|Aachen|,|Stuttgart|,|Nürnberg|,24,(0-0-0) 
+empty.png,_workshop.png,Teile-|eingang,Reparatur-|annahme,Lager,Montage,Reparatur,Test,Test pos?||Test neg?,Büro,Lager,Geräte-|ausgabe,26,(0-0-0)
+_workshop.png,workshop.png,,,,,,,||S4 auf y!|||S7 auf y!,,,,20,(100-100-100)
+empty.png,cocktails.png,Cointreau,Whiskey,Pfefferminz-|likör,Wermut|süß,Wermut|dry,Orangen-|saft,Zitronen-|saft,2x,Gin,Cognac,26,(0-0-0)
+CocktailsAI.png,cocktails_ai.png,|||||||Cointreau,|||||||Whiskey,|||||||Pfefferminz-|likör,|||||||Wermut süß,|||||||Wermut dry,|||||||Orangensaft,|||||||Zitronensaft,,|||||||Gin,|||||||Cognac,22,(0-0-0)
