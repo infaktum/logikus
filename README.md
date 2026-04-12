@@ -1,4 +1,12 @@
+
+
 # Logikus — The Toy Computer Emulation
+
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![pygame 2](https://img.shields.io/badge/pygame-2-brightgreen)](https://www.pygame.org/news)
+[![License: MIT](https://img.shields.io/github/license/infaktum/logikus)](LICENSE)
+
+
 
 ![Logikus_Box.jpg](docs/images/Logikus_Box.jpg)
 
@@ -117,11 +125,13 @@ This emulation includes some features that were not present in the original Logi
 load wire configurations, different skins for the board, and a hidden menu for accessing additional settings.
 
 - If a lamp is lit, you may make the connections to it visible by hovering the mouse cursor over the lamp - the
-  connecting wires turn to red. This allows you to see how the electricity flows from the start contact `Q` to the lamp,
+  connecting wires turn to a bright color. This allows you to see how the *electricity flow* from the start contact `Q` to the lamp,
   which can be helpful for understanding the logic of your configuration. Note: Only one of the connections to the lamp
   is highlighted, even if there are multiple paths to the lamp.
+- 
+![LogikusHighlight.jpg](docs/images/LogikusHighlight.jpg)
 
-![Image_Highlight.png](documents/images/Image_Highlight.png)
+
 
 - Some keys on the keyboard trigger special actions in the emulator:
 
