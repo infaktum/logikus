@@ -70,7 +70,7 @@ class Controller:
 
     UI_EVENTS = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION, pygame.KEYDOWN, pygame.KEYUP]
 
-    def handle_event(self, event: UI_EVENTS):
+    def handle_event(self, event: Event) -> int:
         """
         Main event handler that routes events based on current UI mode.
 

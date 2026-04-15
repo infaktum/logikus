@@ -43,7 +43,7 @@ SIZE = logikus.grid_size
 SIZE_PATCHBOARD = (1155, 930)
 SIZE_LAMP = (7 * SIZE, 10 * SIZE)
 
-# ---------------------------------------------- Skin Ccolors -------------------------------------------
+# ---------------------------------------------- Skin Colors -------------------------------------------
 
 SKIN_CLASSIC = {'bg': (195, 175, 145), 'fg': (187, 68, 62), 'lamp_on': (244, 247, 225), 'lamp_off': (110, 45, 7),
                 'wire': [(50, 50, 200), (50, 150, 50), (200, 50, 50), (200, 50, 200), (50, 200, 200), (255, 255, 50),
@@ -166,6 +166,13 @@ class Assets:
         return dark_surface
 
     def create_lamp_images(self, surface: Surface, lamp: int):
+        """
+        Create and store on/off lamp images for a specific lamp.
+
+        Args:
+            surface (pygame.Surface): The lamp surface in 'on' state.
+            lamp (int): Lamp index (0-9).
+        """
         self.images[f'L{lamp}_on'] = surface
         surface = pygame.Surface(SIZE_LAMP)
         surface.set_colorkey((255, 0, 255))
@@ -300,7 +307,16 @@ def draw_text3d(surface: pygame.Surface, color1: RGB, text: str, size: int, posi
 # ----------------------------------- Resource helpers ------------------------------------------
 
 
-def get_base_path():
+def get_base_path() -> Path:
+    """
+    Get the base path for loading assets.
+
+    For PyInstaller builds, returns the temporary directory. Otherwise,
+    returns the directory containing the current module.
+
+    Returns:
+        Path: The base path for asset resources.
+    """
     if hasattr(sys, '_MEIPASS'):
         return Path(sys._MEIPASS)
     return Path(__file__).resolve().parent
@@ -309,15 +325,42 @@ def get_base_path():
 BASE_PATH = get_base_path()
 
 
-def asset_path(*parts):
+def asset_path(*parts) -> Path:
+    """
+    Construct a path to an asset file relative to the base path.
+
+    Args:
+        *parts: Path components to join with the base path.
+
+    Returns:
+        Path: The complete path to the asset.
+    """
     return BASE_PATH.joinpath(*parts)
 
 
-def font(name):
+def font(name: str) -> Path:
+    """
+    Get the path to a font file in the 'fonts' directory.
+
+    Args:
+        name (str): The font filename.
+
+    Returns:
+        Path: The full path to the font file.
+    """
     return asset_path(".", "fonts", name)
 
 
-def image(name):
+def image(name: str) -> Path:
+    """
+    Get the path to an image file in the 'images' directory.
+
+    Args:
+        name (str): The image filename.
+
+    Returns:
+        Path: The full path to the image file.
+    """
     return asset_path("logikus", "images", name)
 
 

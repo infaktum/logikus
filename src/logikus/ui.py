@@ -26,12 +26,10 @@ SOFTWARE.
 
 import os
 from datetime import datetime
-from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Dict
 
 import pygame
 from pygame import Surface
-from pygame.sprite import Sprite, Group
 
 from logikus.assets import Assets, SKIN_CLASSIC, load_standard_font
 from logikus.logic import Logic, ON
@@ -45,8 +43,6 @@ STATE_QUITTING = 2
 
 MODE_NORMAL = 0
 MODE_WIRING = 1
-
-SIZE = 15
 
 
 # -------------------------------------------- Ui -------------------------------------------------
@@ -66,7 +62,6 @@ class Ui:
             skin: The visual skin/theme for the emulator.
             rows (int): Number of rows in the grid.
             cols (int): Number of columns in the grid.
-            grid_size (int): Size of each grid cell in pixels.
         """
 
         self.surface = surface
@@ -78,7 +73,7 @@ class Ui:
 
         self.assets = Assets(skin)
         self.components = {}
-        self.contacts = {}
+        self.contacts: Dict[str, Contact] = {}
         self.wiring = Wiring()
         self.mouse_position = None
         self.colors_wire = self.assets.skin["wire"]
@@ -87,8 +82,8 @@ class Ui:
 
         self.board = self.assets.images['board']
 
-        self.lamps = Group()
-        self.sliders = Group()
+        self.lamps = []
+        self.sliders = []
         self.menu = Menu()
 
         self.init_contacts()
@@ -105,6 +100,12 @@ class Ui:
 
     @property
     def wire_colors(self):
+        """
+        Get the list of available wire colors.
+
+        Returns:
+            list: List of RGB color tuples for wires.
+        """
         return self.assets.skin['wire']
 
     @property
@@ -115,11 +116,12 @@ class Ui:
         """
         return self.colors_wire[self.color_wire_active]
 
-    def cycle_wire_color(self, direction):
+    def cycle_wire_color(self, direction: int = 1) -> None:
         """
-        Cycles through the indizes of available colors
-        Returns:
+        Cycles through the indices of available wire colors.
 
+        Args:
+            direction (int): Direction to cycle (-1 for backward, 1 for forward). Defaults to 1.
         """
         self.color_wire_active = (self.color_wire_active + direction) % len(self.colors_wire)
         self.color_picker.color = self.colors_wire[self.color_wire_active]
@@ -190,13 +192,15 @@ class Ui:
     def init_sliders(self):
         """
         Initialize all slider components and their grid positions.
+
+        Creates 10 sliders (S0-S9) and registers them in the components map.
         """
         for number in range(10):
             col, row = 9 + 7 * number, 57
             pos = self.rc_to_xy(row, col)
             slider = Slider(f'S{number}', self.assets.images['slider'], pos)
 
-            self.sliders.add(slider)
+            self.sliders.append(slider)
             for c in range(col, col + 3):
                 for r in range(row - 5, row + 5):
                     self.components[(r, c)] = slider
@@ -218,13 +222,15 @@ class Ui:
     def init_lamps(self):
         """
         Initialize all lamp components and their grid positions.
+
+        Creates 10 lamps (L0-L9) with on/off images and registers them in the components map.
         """
         for l in range(10):
             col = 7 + 7 * l
             row = 0
             image_on, image_off = (self.assets.images[f'L{l}_on'], self.assets.images[f'L{l}_off'])
             lamp = Lamp(f'L{l}', image_on, image_off, self.rc_to_xy(row, col))
-            self.lamps.add(lamp)
+            self.lamps.append(lamp)
             for c in range(col, col + 7):
                 for r in range(row, row + 10):
                     self.components[(r, c)] = lamp
@@ -232,30 +238,37 @@ class Ui:
     def init_menu(self):
         """
         Initialize all menu items and their grid positions.
+
+        Creates menu items (New, Open, Save, Quit) and registers them in the components map.
         """
         for n, (name, image) in enumerate(
                 zip(["New", "Open", "Save", "Quit"], ["menu_new", "menu_open", "menu_save", "menu_quit"])):
-            item = MenuItem(name, self.assets.images[image], (SIZE, (2 * n + 1) * SIZE))
-            self.menu.add(item)
+            item = MenuItem(name, self.assets.images[image], (self.grid_size, (2 * n + 1) * self.grid_size))
+            self.menu.add_item(item)
             for c in range(0, 7):
                 self.components[(2 * n + 1, c)] = item
                 self.components[(2 * n + 2, c)] = item
 
     def init_active_color_box(self):
         """
-        Initialize the color picker.
+        Initialize the color picker for wire color selection.
+
+        Returns:
+            ColorPicker: The initialized color picker instance.
         """
-        box = ColorPicker(color=self.active_wire_color)
+        box = ColorPicker(color=self.active_wire_color, size=self.grid_size)
         return box
 
     def init_labels(self):
         """
         Initialize the labels area and its grid positions.
 
+        Creates a surface for rendering labels on the patchboard.
+
         Returns:
             pygame.Surface: The labels surface.
         """
-        labels = pygame.Surface((70 * SIZE, SIZE))
+        labels = pygame.Surface((70 * self.grid_size, self.grid_size))
         for c in range(9, 9 + 70):
             self.components[(51, c)] = labels
         return labels
@@ -290,7 +303,7 @@ class Ui:
         Returns:
             Slider: The slider instance, or None if not found.
         """
-        for slider in self.sliders.sprites():
+        for slider in self.sliders:
             if slider.name == f'S{number}':
                 return slider
         return None
@@ -305,7 +318,7 @@ class Ui:
         Returns:
             Lamp: The lamp instance, or None if not found.
         """
-        for lamp in self.lamps.sprites():
+        for lamp in self.lamps:
             if lamp.name == f'L{number}':
                 return lamp
         return None
@@ -455,8 +468,10 @@ class Ui:
         """
         self.surface.blit(self.board, (0, 0))
 
-        self.sliders.draw(self.surface)
-        self.lamps.draw(self.surface)
+        for slider in self.sliders:
+            slider.draw(self.surface)
+        for lamp in self.lamps:
+            lamp.draw(self.surface)
         self.button.draw(self.surface)
         self.draw_wiring()
         self.draw_labels()
@@ -473,8 +488,8 @@ class Ui:
         font = load_standard_font(14)
         for n, label in enumerate(self.label_names):
             text = font.render(label, True, (0, 0, 0))
-            x_offset = (7 * SIZE - text.get_width()) // 4
-            self.surface.blit(text, (8 * SIZE + 7 * n * SIZE + x_offset, 51 * SIZE - 1))
+            x_offset = (7 * self.grid_size - text.get_width()) // 4
+            self.surface.blit(text, (8 * self.grid_size + 7 * n * self.grid_size + x_offset, 51 * self.grid_size - 1))
 
     def draw_wiring(self):
         """
@@ -507,7 +522,7 @@ class Ui:
         Draw the menu if it is visible.
         """
         if self.menu.visible:
-            for item in self.menu.sprites():
+            for item in self.menu.items:
                 self.surface.blit(item.image, item.rect.topleft)
 
     def draw_color_picker(self) -> None:
@@ -517,7 +532,7 @@ class Ui:
         """
         if self.color_picker.visible:
             self.surface.blit(self.color_picker.image,
-                              pygame.Vector2(self.color_picker.pos) - pygame.Vector2(SIZE, SIZE))
+                              pygame.Vector2(self.color_picker.pos) - pygame.Vector2(self.grid_size, self.grid_size))
 
     def draw_grid(self) -> None:
         """
@@ -604,17 +619,17 @@ class Ui:
             if lamp:
                 lamp.state = state
 
-    def load_wiring(self, path: Path) -> None:
+    def load_wiring(self, path_str: str) -> None:
         """
         Load wiring configuration from a file.
 
         Args:
-            path (str): Path to the wiring file.
+            path_str (str): Path to the wiring file.
         """
-        if os.path.exists(path):
-            with open(path, 'r') as f:
+        if os.path.exists(path_str):
+            with open(path_str, 'r') as f:
                 for line in f:
-                    contacts, path = line.strip().split(' : ') if ' : ' in line else (line.strip(), None)
+                    contacts, path_str = line.strip().split(' : ') if ' : ' in line else (line.strip(), None)
 
                     start_end, color = contacts.split(' ') if ' ' in contacts else (contacts, '0')
 
@@ -627,11 +642,14 @@ class Ui:
                         wire.path = [start_contact.center]
                     else:
                         raise ValueError("Start connection must be defined.")
-                    if path:
-                        for point in path.split('-'):
+                    if path_str:
+                        for point in path_str.split('-'):
                             x, y = point.strip().strip('()').split(',')
                             wire.path.append((int(x), int(y)))
-                    wire.path.append(end_contact.center)
+                    if end_contact:
+                        wire.path.append(end_contact.center)
+                    else:
+                        raise ValueError("End connection must be defined.")
                     self.put_wire(wire)
 
     def load_labels(self, path: str) -> None:
@@ -654,7 +672,6 @@ class Ui:
         wiring = getattr(self, "wiring", None)
         wires = getattr(wiring, "wires", []) if wiring is not None else []
         wires_count = len(wires)
-        live_wires_count = len(list(wiring.live_wires())) if wiring is not None else 0
         sliders_count = len(self.sliders) if getattr(self, "sliders", None) is not None else 0
         lamps_count = len(self.lamps) if getattr(self, "lamps", None) is not None else 0
         active = getattr(getattr(self, "active_contact", None), "id", None)
@@ -667,7 +684,7 @@ class Ui:
         return (
             f"Ui(cols={getattr(self, 'cols', '?')}, rows={getattr(self, 'rows', '?')}, "
             f"grid_size={getattr(self, 'grid_size', '?')}, contacts={contacts_count}, "
-            f"wires={wires_count}, live_wires={live_wires_count}, sliders={sliders_count}, "
+            f"wires={wires_count}, sliders={sliders_count}, "
             f"lamps={lamps_count}, active_contact={active}, board={board_present}, "
             f"resources={resources_info})"
         )
@@ -690,9 +707,9 @@ class Ui:
 
 # -------------------------------------------- Slider -------------------------------------------------
 
-class Slider(Sprite):
+class Slider:
     """
-    UI slider (switch) sprite used on the Logikus patchboard.
+    UI slider (switch) used on the Logikus patchboard.
 
     Attributes:
         name (str): Identifier of the slider (e.g. 'S0').
@@ -736,6 +753,15 @@ class Slider(Sprite):
         """
         self.state = not self.state
 
+    def draw(self, surface: Surface) -> None:
+        """
+        Draw the slider on the given surface.
+        
+        Args:
+            surface (pygame.Surface): The surface to draw the slider on.
+        """
+        surface.blit(self.image, self.rect.topleft)
+
     def __repr__(self) -> str:
         """
         Short debug representation showing name and boolean state.
@@ -751,7 +777,7 @@ class Slider(Sprite):
 
 # -------------------------------------------- Button -------------------------------------------------
 
-class Button(Sprite):
+class Button:
     """
     UI button sprite used on the Logikus patchboard.
 
@@ -790,18 +816,28 @@ class Button(Sprite):
             surface.blit(self.image, self.rect.topleft)
 
     def __repr__(self) -> str:
-        """Short debug representation showing name and boolean state."""
+        """
+        Short debug representation showing name and boolean state.
+
+        Returns:
+            str: Debug representation of the button.
+        """
         return f"Button {self.name} -> {self.state}"
 
     def __str__(self) -> str:
-        """Short representation showing name and boolean state."""
+        """
+        Short representation showing name and boolean state.
+
+        Returns:
+            str: String representation of the button.
+        """
         return f"Button {self.name} -> {self.state}"
 
 
 # -------------------------------------------- Lamp -------------------------------------------------
 
 
-class Lamp(Sprite):
+class Lamp:
     """
     UI lamp sprite used on the Logikus patchboard.
 
@@ -843,12 +879,27 @@ class Lamp(Sprite):
     def __repr__(self) -> str:
         """
         Short debug representation showing name and boolean state.
+
+        Returns:
+            str: Debug representation of the lamp.
         """
         return f"Lamp {self.name} -> {self.state}"
+
+    def draw(self, surface: Surface) -> None:
+        """
+        Draw the lamp on the given surface.
+
+        Args:
+            surface (pygame.Surface): The surface to draw the lamp on.
+        """
+        surface.blit(self.image, (self.rect.topleft[0] + 2, self.rect.topleft[1] - 2))
 
     def __str__(self) -> str:
         """
         Short representation showing name and boolean state.
+
+        Returns:
+            str: String representation of the lamp.
         """
         return f"Lamp {self.name} -> {self.state}"
 
@@ -878,26 +929,60 @@ class Label:
         self.rect = self.image.get_rect(topleft=pos)
 
     def __repr__(self) -> str:
-        """Short debug representation showing name."""
+        """
+        Short debug representation showing name.
+        
+        Returns:
+            str: Debug representation of the label.
+        """
         return f"Label {self.name}"
 
     def __str__(self) -> str:
-        """Short representation showing name."""
+        """
+        Short representation showing name.
+        
+        Returns:
+            str: String representation of the label.
+        """
         return f"Label {self.name}"
 
 
 # ----------------------------------------- Active Color Box -------------------------------
 
 class ColorPicker:
-    def __init__(self, color) -> None:
+    """
+    A color picker display element for wire color selection.
+    
+    Attributes:
+        name (str): Identifier for the color picker.
+        surface (pygame.Surface): Surface used to display the current color.
+        color (tuple): Current color (RGB tuple).
+        visible (bool): Whether the color picker is visible.
+        pos (tuple): Position (x, y) for the color picker.
+    """
+
+    def __init__(self, color, size) -> None:
+        """
+        Initialize the ColorPicker.
+
+        Args:
+            color (tuple): Initial RGB color tuple.
+            size (int): Size in pixels for the color picker square.
+        """
         self.name = "active color"
-        self.surface = pygame.Surface((3 * SIZE, 3 * SIZE))
+        self.surface = pygame.Surface((3 * size, 3 * size))
         self.color = color
         self.visible = False
         self.pos = None
 
     @property
     def image(self):
+        """
+        Get the current color picker image.
+
+        Returns:
+            pygame.Surface: Surface displaying the current color with black border.
+        """
         self.surface.fill(self.color)
         local_rect = self.surface.get_rect()  # (0,0,w,h)
         pygame.draw.rect(self.surface, (0, 0, 0), local_rect, 1)
@@ -906,13 +991,16 @@ class ColorPicker:
     def __repr__(self) -> str:
         """
         Short debug representation showing name, color, visibility, and position.
+
+        Returns:
+            str: Debug representation of the color picker.
         """
         return f"ColorPicker(name={self.name!r}, color={self.color}, visible={self.visible}, pos={self.pos})"
 
 
 # -------------------------------------------- Menu and  MenuItem -------------------------------------------------
 
-class MenuItem(Sprite):
+class MenuItem:
     """
     UI menu item sprite used in the Logikus application.
 
@@ -937,19 +1025,31 @@ class MenuItem(Sprite):
         self.rect = self.image.get_rect(topleft=pos)
 
     def __repr__(self) -> str:
-        """Short debug representation showing name."""
+        """
+        Short debug representation showing name.
+        
+        Returns:
+            str: Debug representation of the menu item.
+        """
         return f"MenuItem {self.name}"
 
     def __str__(self) -> str:
-        """Short representation showing name."""
+        """
+        Short representation showing name.
+        
+        Returns:
+            str: String representation of the menu item.
+        """
         return f"MenuItem {self.name}"
 
 
-class Menu(Group):
+class Menu:
     """
     UI menu sprite group used in the Logikus application.
+    
     Attributes:
-        visible (bool): Whether the menu is currently
+        visible (bool): Whether the menu is currently visible.
+        items (list): List of MenuItem objects in the menu.
     """
 
     def __init__(self) -> None:
@@ -958,6 +1058,7 @@ class Menu(Group):
         """
         super().__init__()
         self.visible = False
+        self.items = []
 
     def add_item(self, item: MenuItem) -> None:
         """
@@ -966,16 +1067,22 @@ class Menu(Group):
         Args:
             item: MenuItem sprite to add to the menu.
         """
-        self.add(item)
+        self.items.append(item)
 
     def __repr__(self) -> str:
         """
         Short debug representation showing number of items.
+        
+        Returns:
+            str: Debug representation of the menu.
         """
-        return f"Menu with {len(self.sprites())} items"
+        return f"Menu with {len(self.items)} items"
 
     def __str__(self) -> str:
         """
         Short representation showing number of items.
+        
+        Returns:
+            str: String representation of the menu.
         """
-        return f"Menu with {len(self.sprites())} items"
+        return f"Menu with {len(self.items)} items"

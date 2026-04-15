@@ -167,8 +167,7 @@ class Wire:
         Attributes:
             start (Contact): Starting contact.
             end (Contact): Ending contact.
-            path (list): List of (x, y) coordinate tuples representing the wire routing path.
-            active (bool): Whether the wire is currently active/conducting.
+
         """
         self.start = start
         self.end = end
@@ -186,7 +185,8 @@ class Wire:
         Returns:
             str: Wire description in format 'start_id-end_id : (x1,y1) - (x2,y2) - ...'
         """
-        text = f'{self.start.id}-{self.end.id} {self.color}'
+        end_id = self.end.id if self.end is not None else 'None'
+        text = f'{self.start.id}-{end_id} {self.color}'
         if self.path and len(self.path) > 2:
             text += (' : ' + ' - '.join(f'({x},{y})' for x, y in self.path[1:-1]))
         return text
@@ -236,10 +236,6 @@ class Wiring:
         """
         Initialize a Wiring instance.
 
-        Attributes:
-            wires (list): Collection of all Wire objects.
-            path (list): Current signal propagation path through contacts.
-            wire (Wire, optional): The currently selected or active wire.
         """
         self.wires = []
         self.path = None
@@ -326,9 +322,10 @@ class Wiring:
         Args:
             wire (Wire): The wire to add.
         """
-        wire.start.connect(wire.end)
-        wire.end.connect(wire.start)
-        self.wires.append(wire)
+        if wire.start and wire.end:
+            wire.start.connect(wire.end)
+            wire.end.connect(wire.start)
+            self.wires.append(wire)
 
     def remove_wire(self, wire: Wire) -> None:
         """
@@ -341,7 +338,7 @@ class Wiring:
             wire (Wire): The wire to remove.
         """
         for w in self.wires:
-            if w == wire:
+            if w == wire and wire.start and wire.end:
                 wire.start.disconnect()
                 wire.end.disconnect()
                 self.wires.remove(w)
