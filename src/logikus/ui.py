@@ -31,7 +31,7 @@ from typing import Tuple, Dict
 import pygame
 from pygame import Surface
 
-from logikus.assets import Assets, SKIN_CLASSIC, load_standard_font
+from logikus.assets import Assets, SKIN_CLASSIC
 from logikus.logic import Logic, ON
 from logikus.wiring import Wiring, Wire, Contact
 
@@ -43,6 +43,9 @@ STATE_QUITTING = 2
 
 MODE_NORMAL = 0
 MODE_WIRING = 1
+
+N_LAMPS = 10  # Number of Lamps
+N_COLS = 10  # Number of columns
 
 
 # -------------------------------------------- Ui -------------------------------------------------
@@ -468,28 +471,20 @@ class Ui:
         """
         self.surface.blit(self.board, (0, 0))
 
-        for slider in self.sliders:
-            slider.draw(self.surface)
-        for lamp in self.lamps:
-            lamp.draw(self.surface)
+        self.draw_lamps_and_sliders()
         self.button.draw(self.surface)
         self.draw_wiring()
-        self.draw_labels()
         self.draw_menu()
         self.draw_color_picker()
 
         if self.grid_visible:
             self.draw_grid()
 
-    def draw_labels(self):
-        """
-        Draw the label texts on the board.
-        """
-        font = load_standard_font(14)
-        for n, label in enumerate(self.label_names):
-            text = font.render(label, True, (0, 0, 0))
-            x_offset = (7 * self.grid_size - text.get_width()) // 4
-            self.surface.blit(text, (8 * self.grid_size + 7 * n * self.grid_size + x_offset, 51 * self.grid_size - 1))
+    def draw_lamps_and_sliders(self) -> None:
+        for slider in self.sliders:
+            slider.draw(self.surface)
+        for lamp in self.lamps:
+            lamp.draw(self.surface)
 
     def draw_wiring(self):
         """
@@ -526,7 +521,6 @@ class Ui:
                 self.surface.blit(item.image, item.rect.topleft)
 
     def draw_color_picker(self) -> None:
-
         """
         Draws the color picker.
         """
