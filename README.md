@@ -1,5 +1,3 @@
-
-
 # Logikus — The Toy Computer Emulation
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
@@ -13,7 +11,7 @@
 The **Spielcomputer LOGIKUS** (*Toy Computer Logikus*) was an educational toy produced by the German
 company **Kosmos**. It was designed to teach children the basics of logical circuits and programming-style thinking
 using switches, wires and lamps. To be frank, it was neither a toy nor a computer in the modern sense (or maybe *any*
-ssense), but rather a simple logic puzzle device that allowed users to create and test various logical configurations.
+sense), but rather a simple logic puzzle device that allowed users to create and test various logical configurations.
 The device featured a board with contact points, wires to connect them, and lamps that would light up based on the
 connections made.
 

@@ -8,6 +8,8 @@ __version__ = "0.1.0"
 __author__ = "Heiko Sippel"
 
 font = "LiberationSans-Regular.ttf"
+grid_size = 15  # 15
+window_size = (1155, 930)
 
 
 def run(skin: str = "classic"):

@@ -25,9 +25,11 @@ SOFTWARE.
 """
 
 import pygame
+from pygame.event import Event
 
+from logikus.logic import Logic
 from logikus.ui import Contact, Button, Slider, Lamp, MenuItem, STATE_IDLE, STATE_REDRAWING, STATE_QUITTING, \
-    MODE_WIRING, MODE_NORMAL
+    MODE_WIRING, MODE_NORMAL, Ui
 from logikus.wiring import Wire
 
 
@@ -42,22 +44,19 @@ class Controller:
     It supports both normal operation mode and wiring mode for creating circuit connections.
     """
 
-    def __init__(self, ui_, logic, surface):
+    def __init__(self, surface: pygame.Surface, ui_: Ui, logic: Logic) -> None:
         """
         Initialize the Controller with UI, logic, and surface components.
 
         Args:
+            surface (pygame.Surface): The main display surface.
             ui_ (UI): The user interface instance.
             logic (Logic): The logic engine instance.
-            surface (pygame.Surface): The main display surface.
+
             
         Attributes:
-            ui (UI): Reference to the user interface.
-            logic (Logic): Reference to the logic engine.
             surface (pygame.Surface): The main display surface.
-            state (int): Current controller state (idle, redrawing, etc.).
-            current_path (str): Current project directory path.
-            active_component (Component): Currently active/hovered component.
+            logic (Logic): Reference to the logic engine.
         """
         self.ui = ui_
         self.logic = logic
@@ -71,7 +70,7 @@ class Controller:
 
     UI_EVENTS = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION, pygame.KEYDOWN, pygame.KEYUP]
 
-    def handle_event(self, event):
+    def handle_event(self, event: UI_EVENTS):
         """
         Main event handler that routes events based on current UI mode.
 
@@ -91,7 +90,7 @@ class Controller:
 
     # ------------------------------------------- Wiring Mode Events-------------------------------------------------
 
-    def handle_event_wiring_mode(self, event):
+    def handle_event_wiring_mode(self, event: Event) -> int:
         """
         Handle events specifically for wiring mode.
 
@@ -156,7 +155,7 @@ class Controller:
 
     # ------------------------------------------- Normal Mode Events-------------------------------------------------
 
-    def handle_event_normal_mode(self, event):
+    def handle_event_normal_mode(self, event: Event) -> int:
         """
         Handle events for normal operation mode.
 
@@ -182,7 +181,7 @@ class Controller:
 
     # --------------------------- Mouse Motion Events-------------------------------------------------
 
-    def handle_mouse_motion_event(self, event):
+    def handle_mouse_motion_event(self, event: Event) -> int:
         """
         Handle mouse movement events in normal mode.
 
@@ -232,7 +231,7 @@ class Controller:
 
     # --------------------------------------- Mouse Button Events-------------------------------------------------
 
-    def handle_mouse_button_event(self, event):
+    def handle_mouse_button_event(self, event: Event) -> int:
         """
         Handle mouse button press and release events.
 
@@ -359,7 +358,7 @@ class Controller:
 
     # -------------------------------------- Menu Item Events-------------------------------------------------
 
-    def handle_clicked_menu_item(self, menu_item):
+    def handle_clicked_menu_item(self, menu_item: MenuItem) -> int:
         """
         Handle clicks on menu items.
 
@@ -369,7 +368,7 @@ class Controller:
             menu_item (MenuItem): The clicked menu item.
             
         Returns:
-            int: State change result (may be STATE_QUITTING).
+            int: State change result.
         """
         if menu_item.name == "New":
             result = dialog_query("Delete all wires?", "Do you really want to remove all wires?")
@@ -413,7 +412,7 @@ class Controller:
     BUTTON_EVENTS = [pygame.K_b, pygame.K_t, pygame.K_SPACE]
     SLIDER_EVENTS = list(range(pygame.K_0, pygame.K_9 + 1))
 
-    def handle_key_event(self, event):
+    def handle_key_event(self, event: Event) -> int:
         """
         Handle keyboard events for various shortcuts and controls.
 
@@ -464,7 +463,7 @@ class Controller:
 from tkinter import Tk, filedialog, messagebox
 
 
-def dialog_choose_file(title, default_path='projects/'):
+def dialog_choose_file(title: str, default_path: str = 'projects/') -> str:
     """
     Open a file selection dialog using tkinter.
 
@@ -477,7 +476,7 @@ def dialog_choose_file(title, default_path='projects/'):
                            Defaults to 'projects/'.
 
     Returns:
-        str: The selected file path, or empty string if cancelled.
+        str: The selected file path, or empty string if canceled.
     """
     root = Tk()
     root.withdraw()  # Hide the root window
@@ -485,7 +484,7 @@ def dialog_choose_file(title, default_path='projects/'):
     return file_path
 
 
-def dialog_choose_dir(title, default_path='projects/'):
+def dialog_choose_dir(title: str, default_path: str = 'projects/') -> str:
     """
     Open a directory selection dialog using tkinter.
 
@@ -498,7 +497,7 @@ def dialog_choose_dir(title, default_path='projects/'):
                            Defaults to 'projects/'.
 
     Returns:
-        str: The selected directory path, or empty string if cancelled.
+        str: The selected directory path, or empty string if canceled.
     """
     root = Tk()
     root.withdraw()  # Hide the root window
@@ -506,7 +505,7 @@ def dialog_choose_dir(title, default_path='projects/'):
     return path
 
 
-def dialog_query(title, text):
+def dialog_query(title: str, text: str) -> str:
     """
     Display a yes/no question dialog using tkinter.
 

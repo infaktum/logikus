@@ -23,6 +23,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from __future__ import annotations
+
+from typing import Tuple, List
 
 
 # -------------------------------------------- Contact -------------------------------------------------
@@ -37,7 +40,7 @@ class Contact:
     in this module, so I implement only the necessary rectangle properties (esp. center) directly.
     """
 
-    def __init__(self, id_, x, y, w=15, h=15):
+    def __init__(self, id_: str, x: int, y: int, w: int = 15, h: int = 15) -> None:
         """
         Initialize a Contact instance.
 
@@ -56,7 +59,7 @@ class Contact:
         self.active = False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """
         Return the base name of the contact.
 
@@ -69,7 +72,7 @@ class Contact:
         return self.id.split('.')[0]
 
     @property
-    def center(self):
+    def center(self) -> Tuple[int, int]:
         """
         Return the center point of the contact rectangle.
 
@@ -77,10 +80,10 @@ class Contact:
             tuple: (x, y) coordinates of the center point.
         """
         x, y, w, h = self.rect
-        return x + w // 2, y + h // 2
+        return int(x + w // 2), int(y + h // 2)
 
     @property
-    def hole(self):
+    def hole(self) -> int:
         """
         Return the hole index of the contact.
 
@@ -92,7 +95,7 @@ class Contact:
         """
         return int(self.id.split('.')[1])
 
-    def connect(self, other_contact):
+    def connect(self, other_contact: Contact) -> None:
         """
         Connect this contact to another contact.
 
@@ -105,7 +108,7 @@ class Contact:
         """
         self.connected_to = other_contact
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """
         Remove any existing connection from this contact.
 
@@ -114,7 +117,7 @@ class Contact:
         self.connected_to = None
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         """
         Check if the contact is unconnected.
 
@@ -125,7 +128,7 @@ class Contact:
 
     # ---------------------------------- String representations --------------------------
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return an unambiguous debug representation.
 
@@ -133,7 +136,7 @@ class Contact:
         """
         return f"Contact {self.name}-{self.hole}, connected to {self.connected_to}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return a concise, human-readable representation.
 
@@ -152,7 +155,7 @@ class Wire:
     a path (sequence of waypoints) representing how the wire is routed on the patchboard.
     """
 
-    def __init__(self, start, end=None, color: int = 0):
+    def __init__(self, start: Contact, end: Contact = None, color: int = 0) -> None:
         """
         Initialize a Wire instance.
 
@@ -188,7 +191,7 @@ class Wire:
             text += (' : ' + ' - '.join(f'({x},{y})' for x, y in self.path[1:-1]))
         return text
 
-    def __eq__(self, other):
+    def __eq__(self, other: Wire) -> bool:
         """
         Check equality between two wires.
 
@@ -206,7 +209,7 @@ class Wire:
 
     # ---------------------------------- String representations --------------------------
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return a human-readable string representation of the wire.
 
@@ -229,7 +232,7 @@ class Wiring:
     and provides methods to query and manipulate wire connections.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a Wiring instance.
 
@@ -242,7 +245,7 @@ class Wiring:
         self.path = None
         self.wire = None
 
-    def wire_at(self, contact):
+    def wire_at(self, contact: Contact) -> Wire:
         """
         Find the first wire connected to a given contact.
 
@@ -257,7 +260,7 @@ class Wiring:
                 return wire
         return None
 
-    def wire_between(self, contact1, contact2):
+    def wire_between(self, contact1: Contact, contact2: Contact) -> Wire:
         """
         Find a wire connecting two contacts by their base names.
 
@@ -277,7 +280,7 @@ class Wiring:
                 return wire
         return None
 
-    def wire_in(self, contact):
+    def wire_in(self, contact: Contact) -> Wire:
         """
         Find a wire connected to a specific contact by exact ID.
 
@@ -292,7 +295,7 @@ class Wiring:
                 return wire
         return None
 
-    def live_wires(self):
+    def live_wires(self) -> List[Wire]:
         """
         Determine which wires are currently active in the signal path.
 
@@ -313,7 +316,7 @@ class Wiring:
                     live_wires.append(live_wire)
         return live_wires
 
-    def add_wire(self, wire):
+    def add_wire(self, wire: Wire) -> None:
         """
         Add a wire to the wiring and establish the connection.
 
@@ -327,7 +330,7 @@ class Wiring:
         wire.end.connect(wire.start)
         self.wires.append(wire)
 
-    def remove_wire(self, wire):
+    def remove_wire(self, wire: Wire) -> None:
         """
         Remove a wire from the wiring and disconnect its contacts.
 
@@ -344,7 +347,7 @@ class Wiring:
                 self.wires.remove(w)
                 return
 
-    def clear(self):
+    def clear(self) -> None:
         """
         Remove all wires from the wiring.
 
@@ -354,7 +357,7 @@ class Wiring:
         self.wires = []
 
     # ---------------------------------- String representations --------------------------
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return a string representation of all wires.
 

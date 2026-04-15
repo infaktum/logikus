@@ -26,19 +26,24 @@ SOFTWARE.
 
 import sys
 from pathlib import Path
-from typing import Sequence, TypeAlias
+from typing import Sequence, TypeAlias, Tuple
 
 import pygame
-from pygame import Vector2
+from pygame import Vector2, Surface
+
+import logikus
 
 RGB: TypeAlias = tuple[int, int, int]
 Point: TypeAlias = tuple[int, int]
 
 # -------------------------------------------- Constants -------------------------------------------------
 
-SIZE = 15
-BOARD_SIZE = (1155, 930)
+SIZE = logikus.grid_size
+
+SIZE_PATCHBOARD = (1155, 930)
 SIZE_LAMP = (7 * SIZE, 10 * SIZE)
+
+# ---------------------------------------------- Skin Ccolors -------------------------------------------
 
 SKIN_CLASSIC = {'bg': (195, 175, 145), 'fg': (187, 68, 62), 'lamp_on': (244, 247, 225), 'lamp_off': (110, 45, 7),
                 'wire': [(50, 50, 200), (50, 150, 50), (200, 50, 50), (200, 50, 200), (50, 200, 200), (255, 255, 50),
@@ -54,9 +59,10 @@ SKIN_BW = {'bg': (240, 240, 240), 'fg': (20, 20, 20), 'lamp_on': (255, 255, 255)
 
 SKINS = {"classic": SKIN_CLASSIC, "hulk": SKIN_HULK, "metal": SKIN_METAL, "bw": SKIN_BW}
 
-TEXT = {'QUIT': 'Quit', 'LOAD': 'Load', 'SAVE': 'Save', 'NEW': 'New'}
+# ----------------------------------------- Texts in menu -------------------------------------------------
 
-FONT = "LiberationSans-Regular.ttf"
+
+TEXT = {'QUIT': 'Quit', 'LOAD': 'Load', 'SAVE': 'Save', 'NEW': 'New'}
 
 
 # -------------------------------------------- Resources -------------------------------------------------
@@ -78,12 +84,12 @@ class Assets:
         generates default lamp images.
 
         Args:
-            skin (dict): Color scheme dictionary containing 'bg', 'fg', 'lamp_on',
+            skin_name: Name of color scheme dictionary containing 'bg', 'fg', 'lamp_on',
                         'lamp_off', 'wire', and 'live_wire' color definitions.
                         Defaults to SKIN_CLASSIC.
                         
         Attributes:
-            skin (str): The current color scheme.
+            skin_name (str): The current color scheme.
         """
 
         self.skin = SKINS[skin_name]
@@ -107,17 +113,12 @@ class Assets:
         Creates both 'on' and 'off' states for each lamp using solid colored rectangles
         based on the current skin colors.
         """
-        for l in range(10):
+        for lamp in range(10):
             surface = pygame.Surface(SIZE_LAMP)
             surface.set_colorkey((255, 0, 255))
             surface.fill((255, 0, 255))
             pygame.draw.rect(surface, self.skin['lamp_on'], (1, 0, *SIZE_LAMP - pygame.Vector2(2, 0)))
-            self.images[f'L{l}_on'] = surface
-            surface = pygame.Surface(SIZE_LAMP)
-            surface.set_colorkey((255, 0, 255))
-            surface.fill((255, 0, 255))
-            pygame.draw.rect(surface, self.skin['lamp_off'], (1, 0, *SIZE_LAMP - pygame.Vector2(2, 0)))
-            self.images[f'L{l}_off'] = surface
+            self.create_lamp_images(surface, lamp)
 
     def load_insert(self, path: str | Path) -> None:
         """
@@ -164,7 +165,15 @@ class Assets:
         dark_surface.fill(dark_color, special_flags=pygame.BLEND_MULT)
         return dark_surface
 
-    def lamps_big_letters(self, letters: Sequence[str], size: int = 120) -> None:
+    def create_lamp_images(self, surface: Surface, lamp: int):
+        self.images[f'L{lamp}_on'] = surface
+        surface = pygame.Surface(SIZE_LAMP)
+        surface.set_colorkey((255, 0, 255))
+        surface.fill((255, 0, 255))
+        pygame.draw.rect(surface, self.skin['lamp_off'], (1, 0, *SIZE_LAMP - pygame.Vector2(2, 0)))
+        self.images[f'L{lamp}_off'] = surface
+
+    def big_letters_inserts(self, letters: Sequence[str], size: int = 120) -> None:
         """
         Generate lamp images displaying large letters.
 
@@ -175,19 +184,14 @@ class Assets:
             letters (list): List of 10 characters/letters to display on lamps.
             size (int): Font size for the letters. Defaults to 120.
         """
-        for l in range(10):
+        for lamp in range(10):
             surface = pygame.Surface(SIZE_LAMP)
             surface.set_colorkey((255, 0, 255))
             surface.fill((255, 0, 255))
-            draw_text(surface, (0, 0, 0), letters[l], size, (25, 0))
-            self.images[f'L{l}_on'] = surface
-            surface = pygame.Surface(SIZE_LAMP)
-            surface.set_colorkey((255, 0, 255))
-            surface.fill((255, 0, 255))
-            pygame.draw.rect(surface, self.skin['lamp_off'], (1, 0, *SIZE_LAMP - pygame.Vector2(2, 0)))
-            self.images[f'L{l}_off'] = surface
+            draw_text(surface, (0, 0, 0), letters[lamp], size, (25, 0))
+            self.create_lamp_images(surface, lamp)
 
-    def lamps_text(self, text: Sequence[str], size: int = 10) -> None:
+    def text_inserts(self, text: Sequence[str], size: int = 10) -> None:
         """
         Generate lamp images displaying custom text.
 
@@ -198,17 +202,12 @@ class Assets:
             text (list): List of text strings to display on lamps.
             size (int): Font size for the text. Defaults to 10.
         """
-        for n, t in enumerate(text):
+        for lamp, t in enumerate(text):
             surface = pygame.Surface(SIZE_LAMP)
             surface.set_colorkey((255, 0, 255))
             surface.fill((255, 0, 255))
             draw_text(surface, (0, 0, 0), t, size, (25, 0))
-            self.images[f'L{n}_on'] = surface
-            surface = pygame.Surface(SIZE_LAMP)
-            surface.set_colorkey((255, 0, 255))
-            surface.fill((255, 0, 255))
-            pygame.draw.rect(surface, self.skin['lamp_off'], (1, 0, *SIZE_LAMP - pygame.Vector2(2, 0)))
-            self.images[f'L{n}_off'] = surface
+            self.create_lamp_images(surface, lamp)
 
 
 # ------------------------------------------- Drawing Helpers -------------------------------------------------
@@ -272,8 +271,8 @@ def draw_text(surface: pygame.Surface, color1: RGB, text: str, size: int, positi
         size (int): Font size in points.
         position (tuple): Position (x, y) to place the text.
     """
-    font = load_font(size)
-    text_surf = font.render(text, True, color1)
+    standard_font = load_standard_font(size)
+    text_surf = standard_font.render(text, True, color1)
     surface.blit(text_surf, position + pygame.Vector2(0, 0))
 
 
@@ -291,10 +290,10 @@ def draw_text3d(surface: pygame.Surface, color1: RGB, text: str, size: int, posi
         size (int): Font size in points.
         position (tuple): Position (x, y) to place the text.
     """
-    font = load_font(size)
-    shadow_surf = font.render(text, True, (0, 0, 0))
+    standard_font = load_standard_font(size)
+    shadow_surf = standard_font.render(text, True, (0, 0, 0))
     surface.blit(shadow_surf, position + pygame.Vector2(1, 1))
-    text_surf = font.render(text, True, color1)
+    text_surf = standard_font.render(text, True, color1)
     surface.blit(text_surf, position + pygame.Vector2(0, 0))
 
 
@@ -322,7 +321,7 @@ def image(name):
     return asset_path("logikus", "images", name)
 
 
-def load_font(size: int) -> pygame.font.Font:
+def load_standard_font(size: int) -> pygame.font.Font:
     """
     Loads the standard font of the game with a given size from the package
     Args:
@@ -331,7 +330,7 @@ def load_font(size: int) -> pygame.font.Font:
     Returns: the font in the fonts directory
 
     """
-    return pygame.font.Font(font(FONT), size)
+    return pygame.font.Font(font(logikus.font), size)
 
 
 # -------------------------------------------- Painter -------------------------------------------------
@@ -358,13 +357,7 @@ class Painter:
             
         Attributes:
             color_bg_medium (tuple): Medium background color.
-            color_bg_light (tuple): Lighter background color (+50).
-            color_bg_dark (tuple): Darker background color (-50).
             color_button_medium (tuple): Medium button color.
-            color_button_light (tuple): Lighter button color (+50).
-            color_button_dark (tuple): Darker button color (-50).
-            SIZE_SLIDER (tuple): Dimensions for slider elements (35, 75).
-            SIZE_BUTTON (tuple): Dimensions for button elements (35, 95).
         """
         self.color_bg_medium = color_bg_medium
         self.color_button_medium = color_button_medium
@@ -388,8 +381,8 @@ class Painter:
         Returns:
             pygame.Surface: Complete board image with alpha channel.
         """
-        surface = pygame.Surface(BOARD_SIZE)
-        surface.fill(self.color_bg_medium, (0, 0, *BOARD_SIZE))
+        surface = pygame.Surface(SIZE_PATCHBOARD)
+        surface.fill(self.color_bg_medium, (0, 0, *SIZE_PATCHBOARD))
 
         self.paint_contacts(surface)
         self.paint_sliders(surface)
@@ -563,10 +556,8 @@ class Painter:
             surface (pygame.Surface): The surface to draw on.
             pos (tuple): Position (x, y) for the contact.
         """
+        self.paint_holes(surface, pos)
         x, y = pos
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7, 7))
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7 + 15, 7))
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7 + 30, 7))
         rect = pygame.Rect(x + 16, y - 13, 15, 11)
         pygame.draw.rect(surface, self.color_bg_light, rect, width=0)
         pygame.draw.rect(surface, (0, 0, 0), (x + 17, y - 12, 13, 9), width=0)
@@ -581,15 +572,24 @@ class Painter:
             surface (pygame.Surface): The surface to draw on.
             pos (tuple): Position (x, y) for the contact.
         """
+        self.paint_holes(surface, pos)
         x, y = pos
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7, 7))
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7 + 15, 7))
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7 + 30, 7))
         rect = pygame.Rect(x + 16, y + 17, 15, 11)
         pygame.draw.rect(surface, self.color_bg_light, rect, width=0)
         pygame.draw.rect(surface, (0, 0, 0), (x + 17, y + 18, 13, 9), width=0)
         pygame.draw.line(surface, self.color_bg_dark, rect.topleft, rect.topright - pygame.Vector2(2, 0), width=1)
         pygame.draw.line(surface, self.color_bg_dark, rect.topleft, rect.bottomleft - pygame.Vector2(0, 2), width=1)
+
+    def paint_holes(self, surface: Surface, pos: Tuple[int, int], ) -> Tuple[int, int]:
+        """
+        Paint three contact holes at the specified position.
+        Args:
+            surface: The surface to draw on.
+            pos: The position (x, y) for the contact.
+        """
+        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7, 7))
+        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7 + 15, 7))
+        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7 + 30, 7))
 
     # ------------------------------------------- Draw Sliders -------------------------------------------------
 

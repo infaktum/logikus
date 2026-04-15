@@ -25,15 +25,17 @@ SOFTWARE.
 """
 
 import os
+from datetime import datetime
+from pathlib import Path
 from typing import Tuple
 
 import pygame
-from logikus.assets import Assets, SKIN_CLASSIC, load_font
+from pygame import Surface
+from pygame.sprite import Sprite, Group
+
+from logikus.assets import Assets, SKIN_CLASSIC, load_standard_font
 from logikus.logic import Logic, ON
 from logikus.wiring import Wiring, Wire, Contact
-from pygame import Surface
-from pygame.locals import Rect
-from pygame.sprite import Sprite, Group
 
 # --------------------------------------------- States -------------------------------------------------
 
@@ -113,13 +115,13 @@ class Ui:
         """
         return self.colors_wire[self.color_wire_active]
 
-    def cycle_wire_color(self, dir):
+    def cycle_wire_color(self, direction):
         """
         Cycles through the indizes of available colors
         Returns:
 
         """
-        self.color_wire_active = (self.color_wire_active + dir) % len(self.colors_wire)
+        self.color_wire_active = (self.color_wire_active + direction) % len(self.colors_wire)
         self.color_picker.color = self.colors_wire[self.color_wire_active]
         if self.wiring.wire:
             self.wiring.wire.color = self.color_wire_active
@@ -391,7 +393,10 @@ class Ui:
             wire (Wire): The wire to add.
         """
         self.wiring.add_wire(wire)
-        self.logic.add_connection([wire.start.name, wire.end.name])
+        if wire.start and wire.end:
+            self.logic.add_connection([wire.start.name, wire.end.name])
+        else:
+            raise ValueError("Wire start and end must be defined to add a connection to logic.")
 
     def get_wire(self, contact1, contact2) -> Wire:
         """
@@ -414,7 +419,10 @@ class Ui:
             wire (Wire): The wire to remove.
         """
         self.wiring.remove_wire(wire)
-        self.logic.remove_connection([wire.start.name, wire.end.name])
+        if wire.start and wire.end:
+            self.logic.remove_connection([wire.start.name, wire.end.name])
+        else:
+            raise ValueError("Wire start and end must be defined to remove a wire.")
 
     def remove_wiring(self):
         """
@@ -462,7 +470,7 @@ class Ui:
         """
         Draw the label texts on the board.
         """
-        font = load_font(14)
+        font = load_standard_font(14)
         for n, label in enumerate(self.label_names):
             text = font.render(label, True, (0, 0, 0))
             x_offset = (7 * SIZE - text.get_width()) // 4
@@ -527,7 +535,8 @@ class Ui:
         """
         Save a screenshot of the current UI to a file.
         """
-        filename = f"screenshot.png"
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        filename = f"screenshot-{timestamp}.png"
         path = os.path.join(".", filename)
         pygame.image.save(self.surface, path)
 
@@ -595,7 +604,7 @@ class Ui:
             if lamp:
                 lamp.state = state
 
-    def load_wiring(self, path: str) -> None:
+    def load_wiring(self, path: Path) -> None:
         """
         Load wiring configuration from a file.
 
@@ -614,7 +623,10 @@ class Ui:
                     end_contact = self.contacts.get(end)
 
                     wire = Wire(start_contact, end_contact, int(color))
-                    wire.path = [start_contact.center]
+                    if start_contact:
+                        wire.path = [start_contact.center]
+                    else:
+                        raise ValueError("Start connection must be defined.")
                     if path:
                         for point in path.split('-'):
                             x, y = point.strip().strip('()').split(',')
@@ -709,7 +721,7 @@ class Slider(Sprite):
         self.state = False
 
     @property
-    def rect(self) -> Rect:
+    def rect(self) -> pygame.Rect:
         """
         Return the current pygame.Rect for rendering based on state.
 
@@ -877,7 +889,7 @@ class Label:
 # ----------------------------------------- Active Color Box -------------------------------
 
 class ColorPicker:
-    def __init__(self, color, pos: Tuple[int, int] = (0, 0)) -> None:
+    def __init__(self, color) -> None:
         self.name = "active color"
         self.surface = pygame.Surface((3 * SIZE, 3 * SIZE))
         self.color = color

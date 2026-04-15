@@ -24,6 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
+
 from typing import Tuple, List, Dict
 
 # -------------------------------------- Constants --------------------------------------
@@ -94,7 +96,7 @@ class Logic:
 
         Args:
             slider (str): The name of the slider.
-            position (str, optional): The new position of the slider ('x' or 'y'). If None, the slider toggles.
+            position (str, optional): The new position of the slider (x or y). If None, the slider toggles.
         """
         if slider in self.sliders:
             self.sliders[slider].move(position)
@@ -185,7 +187,7 @@ class Patchboard:
         button (Button): Reference to the button.
     """
 
-    def __init__(self, slider, button):
+    def __init__(self, slider: Slider, button: Button) -> None:
         """
         Initialize a new patchboard instance.
 
@@ -309,7 +311,7 @@ class Lamp:
         path (Optional[List[str]]): The connection path that lights this lamp, or None if off.
     """
 
-    def __init__(self, name: str, state: str = OFF):
+    def __init__(self, name: str, state: str = OFF) -> None:
         """
         Initialize a Lamp.
 
@@ -358,52 +360,52 @@ class Slider:
 
     Attributes:
         name (str): The slider identifier (e.g. 'S0').
-        position (str): Current position of the slider ('x' or 'y').
+        position (str): Current position of the slider (x or y).
         connections_x (List[List[str]]): Connections active when the slider is in the x position.
         connections_y (List[List[str]]): Connections active when the slider is in the y position.
         connections (List[List[str]]): Currently active connections based on the slider position.
     """
 
-    def __init__(self, name: str, position: str = 'x') -> None:
+    def __init__(self, name: str, position: str = x) -> None:
         """
         Initialize a Slider.
 
         Args:
             name (str): Slider name/identifier.
-            position (str): Initial position ('x' or 'y'). Defaults to 'x'.
+            position (str): Initial position (x or y). Defaults to x.
         """
         self.name: str = name
         self.position: str = position
         # connections for x-position (rows B, D, F, H, K)
         self.connections_x: List[List[str]] = \
             [
-                [f'{name}{reihe}{s1}', f'{name}{reihe}{s2}'] for reihe in ['B', 'D', 'F', 'H', 'K'] for s1, s2 in
+                [f'{name}{reihe}{s1}', f'{name}{reihe}{s2}'] for reihe in [B, D, F, H, K] for s1, s2 in
                 [(a, b), (b, a)]
             ]
         # connections for y-position (rows A, C, E, G, I)
         self.connections_y: List[List[str]] = \
             [
-                [f'{name}{reihe}{s1}', f'{name}{reihe}{s2}'] for reihe in ['A', 'C', 'E', 'G', 'I'] for s1, s2 in
+                [f'{name}{reihe}{s1}', f'{name}{reihe}{s2}'] for reihe in [A, C, E, G, I] for s1, s2 in
                 [(a, b), (b, a)]
             ]
 
         # set current connections according to initial position
-        self.connections: List[List[str]] = self.connections_x if self.position == 'x' else self.connections_y
+        self.connections: List[List[str]] = self.connections_x if self.position == x else self.connections_y
 
     def move(self, position: str = None) -> None:
         """
         Move the slider to a given position or toggle if no position is provided.
 
         Args:
-            position (str, optional): New position ('x' or 'y'). If None, the slider toggles.
+            position (str, optional): New position (x or y). If None, the slider toggles.
         """
         if position:
             self.position = position
         else:
-            # toggle between 'x' and 'y'
-            self.position = 'y' if self.position == 'x' else 'x'
+            # toggle between x and y
+            self.position = y if self.position == x else x
         # update active connections after moving
-        self.connections = self.connections_x if self.position == 'x' else self.connections_y
+        self.connections = self.connections_x if self.position == x else self.connections_y
 
     def __str__(self) -> str:
         """
@@ -437,7 +439,7 @@ class Button:
         Initialize a Button.
 
         Args:
-            name (str): Button name/identifier (default 'T').
+            name (str): Button name/identifier (default: T).
             state (str): Initial state (default OFF).
         """
         self.name: str = name
