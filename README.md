@@ -4,8 +4,6 @@
 [![pygame 2](https://img.shields.io/badge/pygame-2-brightgreen)](https://www.pygame.org/news)
 [![License: MIT](https://img.shields.io/github/license/infaktum/logikus)](LICENSE)
 
-
-
 ![Logikus_Box.jpg](docs/images/Logikus_Box.jpg)
 
 The **Spielcomputer LOGIKUS** (*Toy Computer Logikus*) was an educational toy produced by the German
@@ -123,13 +121,13 @@ This emulation includes some features that were not present in the original Logi
 load wire configurations, different skins for the board, and a hidden menu for accessing additional settings.
 
 - If a lamp is lit, you may make the connections to it visible by hovering the mouse cursor over the lamp - the
-  connecting wires turn to a bright color. This allows you to see how the *electricity flow* from the start contact `Q` to the lamp,
+  connecting wires turn to a bright color. This allows you to see how the *electricity flow* from the start contact `Q`
+  to the lamp,
   which can be helpful for understanding the logic of your configuration. Note: Only one of the connections to the lamp
   is highlighted, even if there are multiple paths to the lamp.
-- 
+-
+
 ![LogikusHighlight.jpg](docs/images/LogikusHighlight.jpg)
-
-
 
 - Some keys on the keyboard trigger special actions in the emulator:
 
@@ -170,20 +168,24 @@ emulator to see different configurations and learn how they work.
 - `README.md` — this file.
 - `LICENSE` — project license (MIT).
 
+## License
+
+This software is published under the MIT license. See the LICENSE file for details.
+
 ## Personal Remarks
 
 This project was a fun and nostalgic exercise in recreating a classic educational toy. I had just bought a vintage
 Logikus board on eBay and found it unfunctional. Most of the contacts did not work anymore, and the plastic had become
-so
-brittle that repairing it was not an option. I decided to create a software emulation of the Logikus instead, as I was
+so brittle that repairing it was not an option. I decided to create a software emulation of the Logikus instead, as I
+was
 looking for a small but not trivial project to dive deeper into Python programming. So I made some photos of it and sent
 it to plastic heaven.
 
 ![Logikus_From_Top.jpg](docs/images/Logikus_From_Top.jpg)
 
-You see the Logikus with the dark hub which removed, covers the small light bulbs. You could insert transparent paper
+You see the Logikus with the dark hub removed, which covers the small light bulbs. You could insert transparent paper
 strips for different projects. If you look closely enough, you can see the small wire which connects one pole of the
-battery to all all the light bulbs. The battery is located on the rear of the board in the top left corner. Its other
+battery to all the light bulbs. The battery is located on the rear of the board in the top left corner. Its other
 pole is connected to the source contact `Q`.
 
 Based on this photo, I created the graphics for the emulation, which was a fun exercise in itself. I wanted to capture
