@@ -322,6 +322,8 @@ class Controller:
 
         return STATE_IDLE
 
+    # ---------------------------------------- Loading ---------------------------------------------
+
     def do_load_wiring(self):
         """
         Load wiring configuration from a file.
@@ -453,6 +455,16 @@ class Controller:
         # Toggling grid visibility with 'g'
         if key in [pygame.K_g]:
             self.ui.grid_visible = (event_type == pygame.KEYDOWN)
+            return STATE_REDRAWING
+
+        # Cycle color with 'c'
+        if key in [pygame.K_c]:
+            self.ui.grid_visible = (event_type == pygame.KEYDOWN)
+            return STATE_REDRAWING
+
+        # Toggling contact visibility with 'r'
+        if key in [pygame.K_r]:
+            self.ui.contacts_visible = (event_type == pygame.KEYDOWN)
             return STATE_REDRAWING
 
         return STATE_IDLE

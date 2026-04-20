@@ -29,9 +29,9 @@ from datetime import datetime
 from typing import Tuple, Dict
 
 import pygame
-from pygame import Surface
+from pygame import Surface, Rect
 
-from logikus.assets import Assets, SKIN_CLASSIC
+from logikus.assets import Assets, SKIN_CLASSIC, SIZE
 from logikus.logic import Logic, ON
 from logikus.wiring import Wiring, Wire, Contact
 
@@ -73,6 +73,7 @@ class Ui:
         self.rows = rows
         self.grid_size = grid_size
         self.grid_visible = False
+        self.contacts_visible = False
 
         self.assets = Assets(skin)
         self.components = {}
@@ -480,7 +481,15 @@ class Ui:
         if self.grid_visible:
             self.draw_grid()
 
+        if self.contacts_visible:
+            self.draw_slider_contacts()
+
     def draw_lamps_and_sliders(self) -> None:
+        """
+        Draws the lamps and sliders.
+        Returns: None
+
+        """
         for slider in self.sliders:
             slider.draw(self.surface)
         for lamp in self.lamps:
@@ -539,6 +548,19 @@ class Ui:
             pygame.draw.line(self.surface, (200, 200, 200), (x, 0), (x, self.height), width=1)
         for y in range(0, self.height, self.grid_size):
             pygame.draw.line(self.surface, (200, 200, 200), (0, y), (self.width, y), width=1)
+
+    def draw_slider_contacts(self) -> None:
+        """
+        Draw the active contacts for debugging. The contact which are connected by the slider position are highlighted.
+        """
+        w, h = 5 * SIZE, 3 * SIZE
+        y_offset = 21 * SIZE
+        for slider in self.sliders:
+            x = slider.rect.left - SIZE
+            for y in range(10):
+                if y % 2 != slider.state:
+                    pygame.draw.rect(self.surface, self.assets.skin["live_wire"], Rect(x, y * h + y_offset, w, h),
+                                     width=2)
 
     def screenshot(self) -> None:
         """
