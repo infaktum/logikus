@@ -177,9 +177,8 @@ This software is published under the MIT license. See the LICENSE file for detai
 This project was a fun and nostalgic exercise in recreating a classic educational toy. I had just bought a vintage
 Logikus board on eBay and found it unfunctional. Most of the contacts did not work anymore, and the plastic had become
 so brittle that repairing it was not an option. I decided to create a software emulation of the Logikus instead, as I
-was
-looking for a small but not trivial project to dive deeper into Python programming. So I made some photos of it and sent
-it to plastic heaven.
+was looking for a small but not trivial project to dive deeper into Python programming. So I made some photos of it and
+sent it to plastic heaven.
 
 ![Logikus_From_Top.jpg](docs/images/Logikus_From_Top.jpg)
 
@@ -201,8 +200,8 @@ and make it look good. My first choice for the graphics was `Qt`, and I created 
 However, I found that `Qt` was a bit too heavy for this project, and I wanted something more lightweight and easier to
 work with. That's when I decided to switch to `pygame`, and started from scratch with a new implementation. The result
 is a much more responsive and visually appealing emulation that runs smoothly on a wide range of systems. Most
-important, the graphics for the wiring in `Qt` was not very good. You simply have much fore freedom in `pygame`for
-drawing.
+important, the graphics for the wiring in `Qt` was not very good. You simply have much fore freedom in `pygame` for
+drawing on screen.
 
 I wanted to stay as close as possible to the original design, while also making some improvements and adding some
 features that I thought would enhance the user experience. The graphics (board, switches and so on) are all generated
@@ -212,10 +211,9 @@ programmatically, which allows for easy customization and the ability to create 
 
 - Write a small tutorial for using the emulator and understanding the logic of the Logikus.
 
-- Implement real project
+- Implement real project management.
 - Implement history undo/redo for wire editing.
-- Implement better import for lamp graphics
-- More colors for wiring
+- Implement better import for lamp graphics.
 - Implement smaller board versions.
 - Add more skins and customization options.
 

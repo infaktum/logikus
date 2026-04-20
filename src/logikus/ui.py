@@ -31,7 +31,7 @@ from typing import Tuple, Dict
 import pygame
 from pygame import Surface, Rect
 
-from logikus.assets import Assets, SKIN_CLASSIC, SIZE
+from logikus.assets import Assets, SIZE, SKINS
 from logikus.logic import Logic, ON
 from logikus.wiring import Wiring, Wire, Contact
 
@@ -53,7 +53,7 @@ N_COLS = 10  # Number of columns
 
 class Ui:
 
-    def __init__(self, surface: Surface, logic: Logic, skin=SKIN_CLASSIC, rows: int = 68, cols: int = 77,
+    def __init__(self, surface: Surface, logic: Logic, skin: str = "classic", rows: int = 68, cols: int = 77,
                  grid_size: int = 15) -> None:
 
         """
@@ -75,7 +75,14 @@ class Ui:
         self.grid_visible = False
         self.contacts_visible = False
 
-        self.assets = Assets(skin)
+        # Accept both skin names and legacy skin dicts.
+        if isinstance(skin, str) and skin in SKINS:
+            self.skin_name = skin
+        else:
+            self.skin_name = next((name for name, skin_data in SKINS.items() if skin_data == skin), "classic")
+
+        self.skin = SKINS[self.skin_name]
+        self.assets = Assets(skin_name=self.skin_name)
         self.components = {}
         self.contacts: Dict[str, Contact] = {}
         self.wiring = Wiring()
@@ -99,6 +106,36 @@ class Ui:
 
         self.label = self.init_labels()
         self.label_names = []
+
+    def cycle_skin(self):
+        skin_names = list(SKINS.keys())
+        current_index = skin_names.index(self.skin_name) if self.skin_name in SKINS else -1
+        next_skin_name = skin_names[(current_index + 1) % len(skin_names)]
+        self.set_skin(next_skin_name)
+
+    def set_skin(self, skin_name: str):
+        self.skin_name = skin_name if skin_name in SKINS else "classic"
+        self.skin = SKINS[self.skin_name]
+        self.assets = Assets(skin_name=self.skin_name)
+        self.colors_wire = self.assets.skin["wire"]
+        self.color_wire_active = 0
+        self.color_wire_live = self.assets.skin["live_wire"]
+        self.board = self.assets.images['board']
+
+        # Rebuild component registry for the new skin.
+        self.components = {}
+        self.contacts = {}
+        self.lamps = []
+        self.sliders = []
+        self.menu = Menu()
+
+        self.init_contacts()
+        self.init_sliders()
+        self.init_lamps()
+        self.button = self.init_button()
+        self.init_menu()
+        self.color_picker = self.init_active_color_box()
+        self.label = self.init_labels()
 
     # -------------------------- Management of wire colors ----------------------------------
 
@@ -560,11 +597,11 @@ class Ui:
             for y in range(10):
                 if y % 2 != slider.state:
                     pygame.draw.rect(self.surface, self.assets.skin["live_wire"], Rect(x, y * h + y_offset, w, h),
-                                     width=2)
+                                     width=3)
 
     def screenshot(self) -> None:
         """
-        Save a screenshot of the current UI to a file.
+        Save a screenshot of the current UI to a file. The file is stored as screenshot-<timestamp>.png in the working directory.
         """
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = f"screenshot-{timestamp}.png"

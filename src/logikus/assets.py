@@ -68,13 +68,16 @@ SKIN_CLASSIC = {'bg': (195, 175, 145), 'fg': (187, 68, 62), 'lamp_on': (244, 247
                 'live_wire': (0, 255, 0)}
 SKIN_HULK = {'bg': (50, 175, 50), 'fg': (190, 60, 190), 'lamp_on': (230, 90, 220), 'lamp_off': (190, 60, 190),
              'wire': [(190, 60, 190)], 'live_wire': (230, 90, 220)}
+SKIN_MILITARY = {'bg': (80, 90, 70), 'fg': (107, 94, 59), 'lamp_on': (255, 255, 255), 'lamp_off': (30, 40, 30),
+                 'wire': [(107, 94, 59), (107, 94, 59), (107, 94, 59)], 'live_wire': (255, 255, 255)}
+
 SKIN_METAL = {'bg': (120, 120, 120), 'fg': (150, 150, 150), 'lamp_on': (150, 150, 150), 'lamp_off': (70, 70, 70),
               'wire': [(20, 20, 20), (100, 100, 100), (180, 180, 180)], 'live_wire': (255, 255, 255)}
 
 SKIN_BW = {'bg': (240, 240, 240), 'fg': (20, 20, 20), 'lamp_on': (255, 255, 255), 'lamp_off': (50, 50, 50),
            'wire': [(20, 20, 20), (100, 100, 100), (180, 180, 180)], 'live_wire': (255, 255, 255)}
 
-SKINS = {"classic": SKIN_CLASSIC, "hulk": SKIN_HULK, "metal": SKIN_METAL, "bw": SKIN_BW}
+SKINS = {"classic": SKIN_CLASSIC, "hulk": SKIN_HULK, "military": SKIN_MILITARY, "metal": SKIN_METAL, "bw": SKIN_BW}
 
 # ----------------------------------------- Texts in menu -------------------------------------------------
 

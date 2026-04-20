@@ -457,9 +457,9 @@ class Controller:
             self.ui.grid_visible = (event_type == pygame.KEYDOWN)
             return STATE_REDRAWING
 
-        # Cycle color with 'c'
-        if key in [pygame.K_c]:
-            self.ui.grid_visible = (event_type == pygame.KEYDOWN)
+        # Cycle themes / skins with 'z'
+        if key in [pygame.K_z] and event_type == pygame.KEYDOWN:
+            self.ui.cycle_skin()
             return STATE_REDRAWING
 
         # Toggling contact visibility with 'r'
