@@ -1,0 +1,103 @@
+/*
+ * Local tweaks for the Read the Docs theme.
+ * Keep this file minimal and theme-agnostic where possible.
+ */
+
+:root {
+  --logikus-ink: #000000;
+  --logikus-parchment: #e9c897;
+  --logikus-parchment-dark: #6b5e3b;
+  --logikus-parchment-soft: rgba(233, 200, 151, 0.16);
+  --logikus-code-bg: rgba(233, 200, 151, 0.22);
+}
+
+/* Base links */
+a,
+a:visited {
+  color: var(--logikus-ink);
+}
+
+a:hover,
+a:focus {
+  color: var(--logikus-parchment-dark);
+}
+
+/* Sidebar / navigation */
+.wy-side-nav-search,
+.wy-nav-side,
+.wy-nav-top {
+  background: var(--logikus-parchment);
+}
+
+.wy-side-nav-search input,
+.wy-side-nav-search .version,
+.wy-side-nav-search > a,
+.wy-side-nav-search > a:visited {
+  color: var(--logikus-parchment-dark);
+}
+
+.wy-side-nav-search > a {
+  display: block;
+  text-align: center;
+  background: var(--logikus-parchment);
+}
+
+.wy-nav-top {
+  border-bottom: 1px solid var(--logikus-parchment-dark);
+}
+
+.wy-side-nav-search > a img.logo {
+  max-width: 180px;
+  width: 100%;
+  height: auto;
+  margin: 0.5rem auto 0.25rem;
+}
+
+.wy-menu-vertical a {
+  color: var(--logikus-parchment-dark);
+}
+
+.wy-menu-vertical a:hover,
+.wy-menu-vertical a:focus {
+  background: rgba(107, 94, 59, 0.08);
+  color: var(--logikus-ink);
+}
+
+.wy-menu-vertical li.current > a,
+.wy-menu-vertical li.current > a:hover {
+  background: rgba(107, 94, 59, 0.12);
+  color: var(--logikus-ink);
+  border-right: 3px solid var(--logikus-parchment-dark);
+}
+
+/* Content area */
+.wy-nav-content a {
+  color: var(--logikus-ink);
+}
+
+.wy-nav-content a:hover,
+.wy-nav-content a:focus {
+  color: var(--logikus-parchment-dark);
+}
+
+/* Make inline code and code blocks slightly more readable */
+code,
+.rst-content code,
+.rst-content .literal,
+pre {
+  background: var(--logikus-code-bg);
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Improve readability on wide displays */
+.wy-nav-content {
+  max-width: 1200px;
+}
+
+/* Subtle emphasis for admonitions */
+.admonition.note,
+.admonition.tip,
+.admonition.warning {
+  border-left: 4px solid var(--logikus-parchment-dark);
+}

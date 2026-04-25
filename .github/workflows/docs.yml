@@ -1,0 +1,78 @@
+name: Build and deploy sphinx documentation
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: { }
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: docs-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, upload and deploy Sphinx docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install sphinx sphinx_rtd_theme myst-parser
+
+      - name: Copy README  to docs
+        run: |
+          cp README.md docs/
+
+      - name: Copy images to    docs
+        run: |
+          mkdir -p docs/images
+          cp -r images/* docs/images/ 
+
+      - name: Generate API docs with sphinx-apidoc
+        run: |
+          set -e
+          if [ -d src/pypublib ]; then
+            sphinx-apidoc -o docs/api src/pypublib --force --separate --module-first || true
+          fi
+
+      - name: Build Sphinx HTML
+        run: |
+          python -m sphinx -b html docs docs/_build/html
+
+      - name: Upload HTML as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: docs/_build/html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build/html
+
+  deploy:
+    environment: github-pages
+    needs: build
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
