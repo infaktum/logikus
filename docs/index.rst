@@ -1,11 +1,12 @@
 Logikus Documentation
 =====================
 
-Welcome to the Logikus documentation.
+LOGIKUS - The Toy Computer Emulation
 
 .. toctree::
    :maxdepth: 2
    :caption: Guides
+
 
    user_guide/index
    developer_guide/index

@@ -52,8 +52,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # Use the Read the Docs theme.
 html_theme = 'sphinx_rtd_theme'
-html_logo = 'images/Logo.png'
-html_favicon = 'images/Logo.png'
+html_logo = 'images/Logo_200.png'
+html_favicon = 'images/Logo_200.png'
 html_theme_options = {
     'logo_only': True,
     'style_nav_header_background': '#000000',
