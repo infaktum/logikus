@@ -225,3 +225,4 @@ __marimo__/
 /docs/_templates/
 /docs/_themes/
 /docs/api/
+/tools/apng.py

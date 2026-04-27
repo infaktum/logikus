@@ -7,5 +7,5 @@ This guide explains architecture and contribution workflows.
    :maxdepth: 2
 
    architecture
-   contributing
+   api
 

@@ -42,8 +42,8 @@ if ($Clean) {
 Write-Host "[2/4] Installing/Updating dependencies..." -ForegroundColor Yellow
 try {
     python -m pip install --upgrade pip setuptools wheel | Out-Null
-    pip install pygame>=2.0.0 | Out-Null
-    pip install pyinstaller | Out-Null
+    python -m pip install "pygame-ce>=2.5.7" | Out-Null
+    python -m pip install pyinstaller | Out-Null
     Write-Host "[2/4] ✓ Dependencies installed" -ForegroundColor Green
 } catch {
     Write-Host "[ERROR] Failed to install dependencies" -ForegroundColor Red

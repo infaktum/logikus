@@ -1,5 +1,6 @@
 # File: `setup.py`
 from pathlib import Path
+
 from setuptools import setup, find_packages
 
 readme_path = Path(__file__).with_name("README.md")
@@ -18,7 +19,7 @@ setup(
     zip_safe=False,
     python_requires=">=3.8",
     install_requires=[
-        "pygame>=2.0.0",
+        "pygame-ce>=2.5.7",
     ],
     entry_points={
         "console_scripts": [

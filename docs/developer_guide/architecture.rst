@@ -7,6 +7,7 @@ Overview
 --------
 
 - `logikus.logic`: simulation state and signal propagation.
+- `logikus.controller`: user interaction and command handling.
 - `logikus.ui`: rendering and interaction.
 - `logikus.wiring`: wire model and serialization.
 - `logikus.assets`: generated graphics and resources.

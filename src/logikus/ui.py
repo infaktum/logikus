@@ -31,7 +31,7 @@ from typing import Tuple, Dict
 import pygame
 from pygame import Surface, Rect
 
-from logikus.assets import Assets, SIZE, SKINS
+from logikus.assets import Assets, SIZE, SKINS, load_standard_font
 from logikus.logic import Logic, ON
 from logikus.wiring import Wiring, Wire, Contact
 
@@ -267,7 +267,7 @@ class Ui:
         Creates 10 lamps (L0-L9) with on/off images and registers them in the components map.
         """
         for l in range(10):
-            col = 7 + 7 * l
+            col = 5 + 7 * l
             row = 0
             image_on, image_off = (self.assets.images[f'L{l}_on'], self.assets.images[f'L{l}_off'])
             lamp = Lamp(f'L{l}', image_on, image_off, self.rc_to_xy(row, col))
@@ -284,11 +284,11 @@ class Ui:
         """
         for n, (name, image) in enumerate(
                 zip(["New", "Open", "Save", "Quit"], ["menu_new", "menu_open", "menu_save", "menu_quit"])):
-            item = MenuItem(name, self.assets.images[image], (self.grid_size, (2 * n + 1) * self.grid_size))
+            item = MenuItem(name, self.assets.images[image], (0, (2 * n + 1) * self.grid_size))
             self.menu.add_item(item)
             for c in range(0, 7):
+                self.components[(2 * n + 0, c)] = item
                 self.components[(2 * n + 1, c)] = item
-                self.components[(2 * n + 2, c)] = item
 
     def init_active_color_box(self):
         """
@@ -510,6 +510,7 @@ class Ui:
         self.surface.blit(self.board, (0, 0))
 
         self.draw_lamps_and_sliders()
+        self.draw_labels()
         self.button.draw(self.surface)
         self.draw_wiring()
         self.draw_menu()
@@ -531,6 +532,16 @@ class Ui:
             slider.draw(self.surface)
         for lamp in self.lamps:
             lamp.draw(self.surface)
+
+    def draw_labels(self):
+        """
+        Draw the label texts on the board.
+        """
+        font = load_standard_font(14)
+        for n, label in enumerate(self.label_names):
+            text = font.render(label, True, (0, 0, 0))
+            x_offset = (7 * self.grid_size - text.get_width()) // 4
+            self.surface.blit(text, (8 * self.grid_size + 7 * n * self.grid_size + x_offset, 51 * self.grid_size - 1))
 
     def draw_wiring(self):
         """

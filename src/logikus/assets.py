@@ -25,6 +25,7 @@ SOFTWARE.
 """
 
 import sys
+from importlib import resources
 from pathlib import Path
 from typing import TypeAlias, Tuple
 
@@ -113,7 +114,7 @@ class Assets:
         """
 
         self.skin = SKINS[skin_name]
-        painter = Painter(self.skin['bg'], self.skin['fg'])
+        painter = Painter(self.skin['bg'], self.skin['fg'], self.skin['lamp_off'])
 
         self.images = {'board': painter.paint_board(),
                        'slider': painter.paint_slider(),
@@ -373,7 +374,7 @@ class Painter:
     and decorative elements. It uses color variations to create 3D effects.
     """
 
-    def __init__(self, color_bg_medium: RGB, color_button_medium: RGB) -> None:
+    def __init__(self, color_bg_medium: RGB, color_button_medium: RGB, color_hud: RGB) -> None:
         """
         Initialize the Painter with base colors.
 
@@ -390,6 +391,7 @@ class Painter:
         """
         self.color_bg_medium = color_bg_medium
         self.color_button_medium = color_button_medium
+        self.color_hud = color_hud
 
         self.color_bg_light = tuple(max(0, min(255, c + 50)) for c in color_bg_medium)
         self.color_bg_dark = tuple(max(0, min(255, c - 50)) for c in color_bg_medium)
@@ -413,6 +415,7 @@ class Painter:
         surface = pygame.Surface(SIZE_PATCHBOARD)
         surface.fill(self.color_bg_medium, (0, 0, *SIZE_PATCHBOARD))
 
+        self.paint_hud(surface)
         self.paint_contacts(surface)
         self.paint_sliders(surface)
         self.draw_logo_and_letters(surface)
@@ -668,3 +671,39 @@ class Painter:
         y = 780
         pygame.draw.rect(surface, (0, 0, 0), (x, y, SIZE, 12 * SIZE + 14), width=0)
         pygame.draw.rect(surface, self.color_button_medium, (x + 1, y + 1, 13, 7 * SIZE), width=0)
+
+    def paint_hud(self, surface: pygame.Surface) -> None:
+        """
+        Draw the part of the hud left and right from the lamps
+        Args:
+            surface: The Logikus surface
+
+        Returns:
+            None
+
+        """
+        w = 5 * SIZE
+        pygame.draw.rect(surface, self.color_hud, (1, 0, w - 2, 10 * SIZE - 2), width=0)
+
+        w = int((1.8) * SIZE)
+
+        pygame.draw.rect(surface, self.color_hud, (SIZE_PATCHBOARD[0] - w + 2, 0, w - 3, 10 * SIZE - 2), width=0)
+
+
+# ---------------------------------- Safe loading of windows icon fromm resources -----------------------
+
+def load_icon() -> None | pygame.Surface:
+    try:
+        icon_resource = resources.files("logikus.images").joinpath("icon.png")
+        if icon_resource.is_file():
+            with icon_resource.open("rb") as f:
+                return pygame.image.load(f)
+    except Exception:
+        pass
+
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
+    for path in (base / "images" / "icon.png", base / "logikus" / "images" / "icon.png"):
+        if path.is_file():
+            return pygame.image.load(str(path))
+
+    return None

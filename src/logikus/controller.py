@@ -373,40 +373,52 @@ class Controller:
             int: State change result.
         """
         if menu_item.name == "New":
-            result = dialog_query("Delete all wires?", "Do you really want to remove all wires?")
-            if result == 'yes':
-                self.ui.remove_wiring()
-                for slider in self.logic.sliders.values():
-                    slider.position = 0
-                self.logic.compute()
-                return STATE_REDRAWING
-            return STATE_IDLE
+            return self.do_new_wiring()
 
         if menu_item.name == "Open":
-            path = dialog_choose_dir("Open project...", default_path=self.current_path)
-            if path:
-                self.current_path = path + '/'
-                self.ui.remove_wiring()
-                self.ui.load_project(self.current_path)
-                self.logic.compute()
-                return STATE_REDRAWING
-            return STATE_IDLE
+            return self.do_open_project()
 
         if menu_item.name == "Save":
-            path = dialog_choose_dir("Save Project...", default_path=self.current_path)
-            if path:
-                self.current_path = path + '/'
-                self.ui.save_project(self.current_path)
-                return STATE_REDRAWING
-            return STATE_IDLE
+            return self.do_save_project()
 
         if menu_item.name == "Quit":
-            result = dialog_query("Quit?", "Do you really want to quit?")
-            if result == 'yes':
-                return STATE_QUITTING
-            else:
-                return STATE_IDLE
+            return self.do_quit()
 
+        return STATE_IDLE
+
+    def do_quit(self) -> int:
+        result = dialog_query("Quit?", "Do you really want to quit?")
+        if result == 'yes':
+            return STATE_QUITTING
+        else:
+            return STATE_IDLE
+
+    def do_save_project(self) -> int:
+        path = dialog_choose_dir("Save Project...", default_path=self.current_path)
+        if path:
+            self.current_path = path + '/'
+            self.ui.save_project(self.current_path)
+            return STATE_REDRAWING
+        return STATE_IDLE
+
+    def do_open_project(self) -> int:
+        path = dialog_choose_dir("Open project...", default_path=self.current_path)
+        if path:
+            self.current_path = path + '/'
+            self.ui.remove_wiring()
+            self.ui.load_project(self.current_path)
+            self.logic.compute()
+            return STATE_REDRAWING
+        return STATE_IDLE
+
+    def do_new_wiring(self) -> int:
+        result = dialog_query("Delete all wires?", "Do you really want to remove all wires?")
+        if result == 'yes':
+            self.ui.remove_wiring()
+            for slider in self.logic.sliders.values():
+                slider.position = 0
+            self.logic.compute()
+            return STATE_REDRAWING
         return STATE_IDLE
 
     # -------------------------------- Keyboard Events----------------------------------------------
@@ -434,7 +446,7 @@ class Controller:
             self.logic.move_slider(slider)
             return STATE_REDRAWING
 
-        # Pressing and releasing the button
+            # Pressing and releasing the button
         if key in self.BUTTON_EVENTS and event_type == pygame.KEYDOWN:
             self.logic.push_button()
             return STATE_REDRAWING
@@ -442,6 +454,29 @@ class Controller:
         if key in self.BUTTON_EVENTS and event_type == pygame.KEYUP:
             self.logic.release_button()
             return STATE_REDRAWING
+
+        # Saving and loading
+
+        if (key in [pygame.K_s] and (
+                event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META))
+                and event_type == pygame.KEYDOWN):
+            return self.do_save_project()
+
+        if (key in [pygame.K_l] and (
+                event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META))
+                and event_type == pygame.KEYDOWN):
+            return self.do_open_project()
+
+        # New wiring
+        if (key in [pygame.K_n] and (
+                event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META))
+                and event_type == pygame.KEYDOWN):
+            return self.do_new_wiring()
+
+        if (key in [pygame.K_q] and (
+                event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META))
+                and event_type == pygame.KEYDOWN):
+            return self.do_quit()
 
         # Taking a screenshot with 'p'
         if key in [pygame.K_p] and event_type == pygame.KEYDOWN:

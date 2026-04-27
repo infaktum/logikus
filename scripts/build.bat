@@ -28,9 +28,9 @@ if errorlevel 1 (
 )
 
 echo [1/4] Installing/Updating dependencies...
-pip install --upgrade pip setuptools wheel >nul
-pip install pygame>=2.0.0 >nul
-pip install pyinstaller >nul
+python -m pip install --upgrade pip setuptools wheel >nul
+python -m pip install "pygame-ce>=2.5.7" >nul
+python -m pip install pyinstaller >nul
 
 if errorlevel 1 (
     echo Error: Failed to install dependencies

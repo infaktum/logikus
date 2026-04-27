@@ -20,7 +20,7 @@ jobs:
     
     strategy:
       matrix:
-        python-version: [ '3.11' ]
+        python-version: [ '3.12' ]
     
     steps:
       - name: Checkout code
@@ -34,8 +34,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install "pygame>=2.0.0" pyinstaller
+          python -m pip install -r .\requirements.txt
+          python -m pip install pyinstaller
           python -m pip install -e .\src\logikus
+
+      - name: Verify pygame-ce Window API
+        run: |
+          python -c "import pygame; print('pygame', pygame.version.ver); assert hasattr(pygame, 'Window'), 'pygame.Window not available'"
 
       - name: Prepare release folder
         shell: powershell

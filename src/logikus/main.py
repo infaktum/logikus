@@ -26,12 +26,11 @@ SOFTWARE.
 
 import argparse
 import sys
-from importlib import resources
-from pathlib import Path
 
 import pygame
 
 import logikus
+from logikus.assets import load_icon
 from logikus.controller import Controller, STATE_QUITTING, STATE_REDRAWING
 from logikus.logic import Logic
 from logikus.ui import Ui
@@ -41,20 +40,18 @@ from logikus.ui import Ui
 
 def main(skin: str = "classic"):
     pygame.init()
-    window = pygame.display.set_mode(logikus.window_size, pygame.SRCALPHA)
-    pygame.display.set_caption("Spielcomputer LOGIKUS®")
 
-    icon = _load_window_icon()
-    if icon is not None:
-        pygame.display.set_icon(icon)
+    window = pygame.Window("Spielcomputer LOGIKUS®", size=logikus.window_size)
+    window.set_icon(load_icon())
+    screen = window.get_surface()
 
     surface = pygame.Surface(logikus.window_size, pygame.SRCALPHA)
     logic = Logic()
     ui = Ui(surface, skin=skin, logic=logic)
 
     ui.draw()
-    window.blit(surface, (0, 0))
-    pygame.display.flip()
+
+    screen.blit(surface, (0, 0))
 
     controller = Controller(surface, ui, logic)
     clock = pygame.time.Clock()
@@ -72,28 +69,10 @@ def main(skin: str = "classic"):
                 if state == STATE_REDRAWING:
                     ui.update()
                     ui.draw()
-                    window.blit(surface, (0, 0))
-                    pygame.display.flip()
+
+                    screen.blit(surface, (0, 0))
+                    window.flip()
         clock.tick(30)
-
-
-# ---------------------------------- Safe loading of windows icon fromm resources -----------------------
-
-def _load_window_icon() -> None | pygame.Surface:
-    """Load the application icon from package resources or PyInstaller data."""
-    try:
-        icon_resource = resources.files("logikus.images").joinpath("icon.png")
-        if icon_resource.is_file():
-            with icon_resource.open("rb") as f:
-                return pygame.image.load(f)
-    except Exception:
-        pass
-
-    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
-    for path in (base / "images" / "icon.png", base / "logikus" / "images" / "icon.png"):
-        if path.is_file():
-            return pygame.image.load(str(path))
-    return None
 
 
 # ------------------------------------------- Entry Point -------------------------------------------------
