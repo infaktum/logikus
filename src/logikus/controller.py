@@ -35,6 +35,7 @@ from logikus.wiring import Wire
 
 # ------------------------------------------ Controller ------------------------------------------------
 
+
 class Controller:
     """
     Main controller class that handles user input and coordinates between UI and logic components.
@@ -425,6 +426,8 @@ class Controller:
 
     BUTTON_EVENTS = [pygame.K_b, pygame.K_t, pygame.K_SPACE]
     SLIDER_EVENTS = list(range(pygame.K_0, pygame.K_9 + 1))
+    SPECIAL_EVENTS = [pygame.K_p, pygame.K_l, pygame.K_g, pygame.K_z, pygame.K_r]
+    CTRL_EVENTS = [pygame.K_s, pygame.K_l, pygame.K_n, pygame.K_q]
 
     def handle_key_event(self, event: Event) -> int:
         """
@@ -440,13 +443,22 @@ class Controller:
             int: State change result.
         """
         key, event_type = event.key, event.type
+
+        # Special keyboard events with CTRL key pressed, like Saving and loading
+
+        if event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META) and event_type == pygame.KEYDOWN:
+            if key in self.CTRL_EVENTS:
+                return self.handle_ctrl_key_events(key)
+            else:
+                return STATE_IDLE
+
         # Moving the sliders
         if key in self.SLIDER_EVENTS and event_type == pygame.KEYDOWN:
             slider = f'S{(key - pygame.K_0 - 1) % 10}'
             self.logic.move_slider(slider)
             return STATE_REDRAWING
 
-            # Pressing and releasing the button
+        # Pressing and releasing the button
         if key in self.BUTTON_EVENTS and event_type == pygame.KEYDOWN:
             self.logic.push_button()
             return STATE_REDRAWING
@@ -455,54 +467,66 @@ class Controller:
             self.logic.release_button()
             return STATE_REDRAWING
 
-        # Saving and loading
+        # Special events like screenshots
+        if key in self.SPECIAL_EVENTS:
+            return self.handle_special_events(key, event_type)
 
-        if (key in [pygame.K_s] and (
-                event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META))
-                and event_type == pygame.KEYDOWN):
-            return self.do_save_project()
+        return STATE_IDLE
 
-        if (key in [pygame.K_l] and (
-                event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META))
-                and event_type == pygame.KEYDOWN):
-            return self.do_open_project()
+    def handle_special_events(self, key, event_type):
+        """
+        Handles special events, like taking screenshots or showing the grid.
 
-        # New wiring
-        if (key in [pygame.K_n] and (
-                event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META))
-                and event_type == pygame.KEYDOWN):
-            return self.do_new_wiring()
+        Args:
+            key: The key event
+            event_type: The event type
 
-        if (key in [pygame.K_q] and (
-                event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META))
-                and event_type == pygame.KEYDOWN):
-            return self.do_quit()
-
-        # Taking a screenshot with 'p'
-        if key in [pygame.K_p] and event_type == pygame.KEYDOWN:
+        Returns:
+            int: State change result.
+        """
+        if key == pygame.K_p and event_type == pygame.KEYDOWN:
             self.ui.screenshot()
             return STATE_IDLE
 
-        if key in [pygame.K_l] and event_type == pygame.KEYDOWN:
+        if key == pygame.K_l and event_type == pygame.KEYDOWN:
             print(self.ui.logic)
             return STATE_IDLE
 
-        # Toggling grid visibility with 'g'
-        if key in [pygame.K_g]:
-            self.ui.grid_visible = (event_type == pygame.KEYDOWN)
-            return STATE_REDRAWING
-
-        # Cycle themes / skins with 'z'
-        if key in [pygame.K_z] and event_type == pygame.KEYDOWN:
+        if key == pygame.K_z and event_type == pygame.KEYDOWN:
             self.ui.cycle_skin()
             return STATE_REDRAWING
 
-        # Toggling contact visibility with 'r'
-        if key in [pygame.K_r]:
-            self.ui.contacts_visible = (event_type == pygame.KEYDOWN)
+        toggle_map = {
+            pygame.K_g: "grid_visible",
+            pygame.K_r: "contacts_visible",
+        }
+
+        attribute = toggle_map.get(key)
+        if attribute is not None:
+            setattr(self.ui, attribute, event_type == pygame.KEYDOWN)
             return STATE_REDRAWING
 
         return STATE_IDLE
+
+    def handle_ctrl_key_events(self, key):
+        """
+        Handles Ctrl-Key events, where key is in ["q","s","l","n"]. Handles Quitting, Loading, Saving and New wiring.
+
+        Args:
+            key: The key event
+
+        Returns:
+            int: State change result.
+        """
+        actions = {
+            pygame.K_s: self.do_save_project,
+            pygame.K_l: self.do_open_project,
+            pygame.K_n: self.do_new_wiring,
+            pygame.K_q: self.do_quit,
+        }
+
+        action = actions.get(key)
+        return action() if action is not None else STATE_IDLE
 
 
 # ------------------------------------------- Dialogs -------------------------------------------------
@@ -526,9 +550,12 @@ def dialog_choose_file(title: str, default_path: str = 'projects/') -> str:
         str: The selected file path, or empty string if canceled.
     """
     root = Tk()
-    root.withdraw()  # Hide the root window
-    file_path = filedialog.askopenfilename(title=title, defaultextension='png', initialdir=default_path)
-    return file_path
+    root.withdraw()
+    center_window(root)
+    try:
+        return filedialog.askopenfilename(parent=root, title=title, defaultextension="png", initialdir=default_path, )
+    finally:
+        root.destroy()
 
 
 def dialog_choose_dir(title: str, default_path: str = 'projects/') -> str:
@@ -547,9 +574,12 @@ def dialog_choose_dir(title: str, default_path: str = 'projects/') -> str:
         str: The selected directory path, or empty string if canceled.
     """
     root = Tk()
-    root.withdraw()  # Hide the root window
-    path = filedialog.askdirectory(title=title, initialdir=default_path)
-    return path
+    root.withdraw()
+    center_window(root)
+    try:
+        return filedialog.askdirectory(parent=root, title=title, initialdir=default_path)
+    finally:
+        root.destroy()
 
 
 def dialog_query(title: str, text: str) -> str:
@@ -566,7 +596,21 @@ def dialog_query(title: str, text: str) -> str:
     Returns:
         str: 'yes' if user clicked Yes, 'no' if user clicked No.
     """
+
     root = Tk()
-    root.withdraw()  # Hide the root window
-    result = messagebox.askquestion(title, text)
-    return result
+    root.withdraw()
+    try:
+        return messagebox.askquestion(title, text, parent=root)
+    finally:
+        root.destroy()
+
+
+def center_window(window) -> Tk:
+    screen_w = window.winfo_screenwidth()
+    screen_h = window.winfo_screenheight()
+    window_w = window.winfo_reqwidth()
+    window_h = window.winfo_reqheight()
+    x = (screen_w - window_w) // 2
+    y = (screen_h - window_h) // 2
+
+    window.geometry(f"1x1+{x}+{y}")

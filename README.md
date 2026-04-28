@@ -44,18 +44,13 @@ interface for experimentation.
 
 ## Requirements
 
-- Python 3.8+ (or 3.x)
-- `pygame` (install with `pip install pygame`)
+- Python 3.8+
+- either `pygame` (install with `pip install pygame`)
+- or `pygame-ce` (install with `pip install pygame-ce`)
 
 ## Running
 
-1. Install dependencies:
-
-````
-python -m pip install pygame
-````
-
-2. Start the emulator:
+Start the emulator with
 
 ````
 python -m logikus
@@ -71,12 +66,6 @@ The interface consists of a graphical representation of the Logikus board, inclu
 - A row of Sliders (`S0`,...,`S9`) that can be moved up and down to change the state of the contacts (`S` actually
   stands for "Schieber", German for "slider")
 - A push button `T` that can be used as an additional input (stands for "Taster", German for "button")
-
-### Where is the menu?
-
-There is a hidden menu which appears if you move the mouse cursor to the top left corner of the window. It allows you to
-load and save wirings in the form of projects. The idea is to keep the interface clean and focused on the board
-itself, while still providing access to additional features through a hidden menu for those who know where to look.
 
 ## What can I do?
 
@@ -127,7 +116,7 @@ load wire configurations, different skins for the board, and a hidden menu for a
   is highlighted, even if there are multiple paths to the lamp.
 -
 
-![LogikusHighlight.jpg](docs/images/LogikusHighlight.jpg)
+![LogikusHighlight.jpg](docs/user_guide/images/LogikusHighlight.jpg)
 
 - Some keys on the keyboard trigger special actions in the emulator:
 
@@ -180,7 +169,7 @@ so brittle that repairing it was not an option. I decided to create a software e
 was looking for a small but not trivial project to dive deeper into Python programming. So I made some photos of it and
 sent it to plastic heaven.
 
-![Logikus_From_Top.jpg](docs/images/Logikus_From_Top.jpg)
+![Logikus_From_Top.jpg](docs/user_guide/images/Logikus_From_Top.jpg)
 
 You see the Logikus with the dark hub removed, which covers the small light bulbs. You could insert transparent paper
 strips for different projects. If you look closely enough, you can see the small wire which connects one pole of the

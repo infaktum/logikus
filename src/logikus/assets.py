@@ -178,12 +178,10 @@ class Assets:
             the darkened image
         """
         dark_surface = pygame.Surface(surface.get_size(), flags=pygame.SRCALPHA)
-        surface.set_alpha(150)
-        dark_surface.fill((0, 0, 0, 255))
         dark_surface.blit(surface, (0, 0))
-        surface.set_alpha(255)
         dark_color = self.skin['lamp_off']
         dark_surface.fill(dark_color, special_flags=pygame.BLEND_MULT)
+
         return dark_surface
 
     def create_lamp_images(self, surface: Surface, lamp: int):

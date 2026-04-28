@@ -1,0 +1,1 @@
+;small;medium;huge;;Mammal;Fish;Bird
