@@ -267,12 +267,12 @@ class Ui:
         Creates 10 lamps (L0-L9) with on/off images and registers them in the components map.
         """
         for l in range(10):
-            col = 5 + 7 * l
+            col = 7 + 7 * l
             row = 0
             image_on, image_off = (self.assets.images[f'L{l}_on'], self.assets.images[f'L{l}_off'])
             lamp = Lamp(f'L{l}', image_on, image_off, self.rc_to_xy(row, col))
             self.lamps.append(lamp)
-            for c in range(col, col + 7):
+            for c in range(col, col + 9):
                 for r in range(row, row + 10):
                     self.components[(r, c)] = lamp
 
@@ -284,11 +284,11 @@ class Ui:
         """
         for n, (name, image) in enumerate(
                 zip(["New", "Open", "Save", "Quit"], ["menu_new", "menu_open", "menu_save", "menu_quit"])):
-            item = MenuItem(name, self.assets.images[image], (0, (2 * n + 1) * self.grid_size))
+            item = MenuItem(name, self.assets.images[image], (self.grid_size, (2 * n + 1) * self.grid_size))
             self.menu.add_item(item)
             for c in range(0, 7):
-                self.components[(2 * n + 0, c)] = item
-                self.components[(2 * n + 1, c)] = item
+                self.components[(2 * n + 0, c + 1)] = item
+                self.components[(2 * n + 1, c + 1)] = item
 
     def init_active_color_box(self):
         """

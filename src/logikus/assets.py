@@ -680,12 +680,12 @@ class Painter:
             None
 
         """
-        w = 5 * SIZE
+        w = 7 * SIZE
         pygame.draw.rect(surface, self.color_hud, (1, 0, w - 2, 10 * SIZE - 2), width=0)
 
         w = int((1.8) * SIZE)
 
-        pygame.draw.rect(surface, self.color_hud, (SIZE_PATCHBOARD[0] - w + 2, 0, w - 3, 10 * SIZE - 2), width=0)
+        # pygame.draw.rect(surface, self.color_hud, (SIZE_PATCHBOARD[0] - w + 2, 0, w - 3, 10 * SIZE - 2), width=0)
 
 
 # ---------------------------------- Safe loading of windows icon fromm resources -----------------------
