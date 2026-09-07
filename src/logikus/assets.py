@@ -52,20 +52,38 @@ class Skin(TypedDict):
 
 # -------------------------------------------- Constants -------------------------------------------------
 
+# Defines the pixel size of the grid. All positions and sizes are computed relative to this
 SIZE = 11  # logikus.grid_size
 
-SIZE_SLIDER = (35, 75)
-SIZE_BUTTON = (35, 95)
+def scaled_pixel(reference: int) -> int:
+    """Scale original artwork pixels from the 15-pixel reference grid."""
+    return round(reference * SIZE / 15)
+
+
+SIZE_SLIDER = (round(2.3 * SIZE), 5 * SIZE)
+SIZE_BUTTON = (round(2.3 * SIZE), 7 * SIZE)
+
+# Shared grid coordinates for artwork and interactive controls.
+LAMP_START_COL = 7
+LAMP_ROW = 0
+CONTROL_COLUMN_STEP = 7
+SLIDER_START_COL = 9
+SLIDER_ROW = 57
+SLIDER_TRACK_ROW = 52
+SLIDER_TRAVEL = scaled_pixel(70)
+BUTTON_COL = 2
+BUTTON_ROW = 55
+CONTROL_DRAW_OFFSET = (scaled_pixel(2), -scaled_pixel(2))
 
 SIZE_PATCHBOARD = (77 * SIZE, 62 * SIZE)
 SIZE_LAMP = (7 * SIZE, 10 * SIZE)
 
-FONT_SIZE_MENU = 20
-FONT_SIZE_KOSMOS = 38
-FONT_SIZE_ABC = 26
-FONT_SIZE_A_B = 18
-FONT_SIZE_S_T = 32
-FONT_SIZE_X_Y = 20
+FONT_SIZE_MENU = int(1.2 * SIZE)
+FONT_SIZE_KOSMOS = int(2.5 * SIZE)
+FONT_SIZE_ABC = int(1.8 * SIZE)
+FONT_SIZE_A_B = int(1.2 * SIZE)
+FONT_SIZE_S_T = int(2.1 * SIZE)
+FONT_SIZE_X_Y = int(1.3 * SIZE)
 
 # Contact layout: board positions and spacing are expressed in grid cells.
 CONTACT_GRID_ORIGIN = (8 * SIZE, 21 * SIZE)
@@ -328,12 +346,16 @@ def draw_text(surface: pygame.Surface, color1: RGB, text: str, size: int, positi
     surface.blit(text_surf, position + pygame.Vector2(0, 0))
 
 
-def draw_text3d(surface: pygame.Surface, color1: RGB, text: str, size: int, position: Point) -> None:
+def draw_text3d(surface: pygame.Surface, color1: RGB, text: str, size: int, position: Point,
+                shadow_offset: int = 1) -> None:
     """
     Draw text with a 3D shadow effect.
 
-    Renders text twice - first a black shadow offset by (1,1), then the main
+    Renders text twice - first an offset black shadow, then the main
     text in the specified color, creating a raised appearance.
+
+    ``shadow_offset`` is the horizontal and vertical shadow distance in pixels
+    and defaults to one pixel for callers using the original artwork scale.
 
     Args:
         surface (pygame.Surface): The surface to draw on.
@@ -345,7 +367,7 @@ def draw_text3d(surface: pygame.Surface, color1: RGB, text: str, size: int, posi
 
     standard_font = load_standard_font(size)
     shadow_surf = standard_font.render(text, True, (0, 0, 0))
-    surface.blit(shadow_surf, position + pygame.Vector2(1, 1))
+    surface.blit(shadow_surf, position + pygame.Vector2(shadow_offset, shadow_offset))
     text_surf = standard_font.render(text, True, color1)
     surface.blit(text_surf, position + pygame.Vector2(0, 0))
 
@@ -530,17 +552,19 @@ class Painter:
         Returns:
             pygame.Surface: Slider surface with 3D appearance and texture.
         """
-        slider = pygame.Surface(self.size_slider + pygame.Vector2(10, 0))
+        slider = pygame.Surface((self.size_slider[0] + scaled_pixel(10), self.size_slider[1]))
 
         slider.set_colorkey((255, 255, 255))
         slider.fill((255, 255, 255))
-        rect = pygame.Rect(4, 0, *self.size_slider)
+        rect = pygame.Rect(scaled_pixel(4), 0, *self.size_slider)
 
-        slider.fill(self.color_button_medium, (5, 0, *self.size_slider))
+        slider.fill(self.color_button_medium, (scaled_pixel(5), 0, *self.size_slider))
 
-        for y in range(5, rect.h, 5):
-            pygame.draw.line(slider, self.color_button_dark, (4, y), (SIZE_SLIDER[0] + 4, y), width=2)
-            pygame.draw.line(slider, self.color_button_light, (4, y - 1), (SIZE_SLIDER[0] + 4, y - 1), width=1)
+        groove_step = max(1, scaled_pixel(5))
+        for y in range(groove_step, rect.h, groove_step):
+            pygame.draw.line(slider, self.color_button_dark, (rect.left, y), (rect.right, y),
+                             width=max(1, scaled_pixel(2)))
+            pygame.draw.line(slider, self.color_button_light, (rect.left, y - 1), (rect.right, y - 1), width=1)
 
         pygame.draw.line(slider, self.color_button_dark, rect.topleft, rect.bottomleft, width=2)
         pygame.draw.line(slider, self.color_button_dark, rect.topright, rect.bottomright, width=2)
@@ -566,17 +590,18 @@ class Painter:
 
         # Draw button in "off" state
 
-        button.fill(self.color_button_medium, (0, 2, *self.size_button - pygame.Vector2(2, 0)))
-        for y in range(8, rect.h, 5):
-            pygame.draw.line(button, self.color_button_dark, (0, y), (43, y), width=2)
-            pygame.draw.line(button, self.color_button_light, (0, y - 1), (43, y - 1), width=1)
-            pass
+        edge_width = max(1, scaled_pixel(2))
+        button.fill(self.color_button_medium, (0, edge_width, rect.w - edge_width, rect.h))
+        for y in range(scaled_pixel(8), rect.h, max(1, scaled_pixel(5))):
+            pygame.draw.line(button, self.color_button_dark, (0, y), (rect.right, y), width=edge_width)
+            pygame.draw.line(button, self.color_button_light, (0, y - 1), (rect.right, y - 1), width=1)
 
-        pygame.draw.line(button, self.color_button_dark, rect.topleft + pygame.Vector2(0, 2), rect.bottomleft, width=2)
-        pygame.draw.line(button, self.color_button_light, rect.topleft + pygame.Vector2(0, 2),
-                         rect.topright + pygame.Vector2(0, 2), width=2)
+        pygame.draw.line(button, self.color_button_dark, rect.topleft + pygame.Vector2(0, edge_width),
+                         rect.bottomleft, width=edge_width)
+        pygame.draw.line(button, self.color_button_light, rect.topleft + pygame.Vector2(0, edge_width),
+                         rect.topright + pygame.Vector2(0, edge_width), width=edge_width)
         pygame.draw.line(button, (0, 0, 0), rect.topright + pygame.Vector2(-1, 0),
-                         rect.bottomright + pygame.Vector2(-1, 0), width=3)
+                          rect.bottomright + pygame.Vector2(-1, 0), width=max(1, scaled_pixel(3)))
 
         return button
 
@@ -593,25 +618,42 @@ class Painter:
 
     def draw_logo_and_letters(self, surface: pygame.Surface) -> None:
         """
-        Draw the KOSMOS logo and letter labels on the board.
+        Draw the KOSMOS logo and letter labels at the current grid size.
+
+        Artwork coordinates use the original 15-pixel grid as a reference.
+        Font constants already depend on SIZE and are not scaled a second time.
+        Border and shadow widths are rounded and kept at least one pixel wide.
 
         Args:
             surface (pygame.Surface): The board surface to draw on.
         """
-        draw_rect_3d(surface, self.color_bg_dark, self.color_bg_light, pygame.Rect(SIZE, 195, 12 * SIZE, 4 * SIZE),
-                     width=2, raised=False)
-        draw_text3d(surface, self.color_bg_light, 'KOSMOS', FONT_SIZE_KOSMOS, (22, 202))
+        reference_grid_size = 15
+
+        def scaled(pixels: int) -> int:
+            """Convert reference artwork coordinates into current pixels."""
+            return round(pixels * SIZE / reference_grid_size)
+
+        def draw_label(text: str, font_size: int, position: Point) -> None:
+            """Draw a label with scaled coordinates and an already scaled font."""
+            x, y = position
+            draw_text3d(surface, self.color_bg_light, text, max(1, font_size),
+                        (scaled(x), scaled(y)), shadow_offset=max(1, scaled(1)))
+
+        logo_frame = pygame.Rect(SIZE, 13 * SIZE, 12 * SIZE, 4 * SIZE)
+        draw_rect_3d(surface, self.color_bg_dark, self.color_bg_light, logo_frame,
+                     width=max(1, scaled(2)), raised=False)
+        draw_label('KOSMOS', FONT_SIZE_KOSMOS, (22, 202))
 
         for n, letter in enumerate(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K']):
             x = 94
             y = 320 + n * 45
 
-            draw_text3d(surface, self.color_bg_light, letter, FONT_SIZE_ABC, (x, y))
+            draw_label(letter, FONT_SIZE_ABC, (x, y))
 
-        draw_text3d(surface, self.color_bg_light, 'S', FONT_SIZE_S_T, (94, 840))
-        draw_text3d(surface, self.color_bg_light, 'T', FONT_SIZE_S_T, (40, 780))
-        draw_text3d(surface, self.color_bg_light, 'y', FONT_SIZE_X_Y, (94, 780))
-        draw_text3d(surface, self.color_bg_light, 'x', FONT_SIZE_X_Y, (94, 900))
+        draw_label('S', FONT_SIZE_S_T, (94, 840))
+        draw_label('T', FONT_SIZE_S_T, (40, 780))
+        draw_label('y', FONT_SIZE_X_Y, (94, 780))
+        draw_label('x', FONT_SIZE_X_Y, (94, 900))
 
     # ------------------------------------------- Paint Contacts -------------------------------------------------
 
@@ -696,16 +738,17 @@ class Painter:
         pygame.draw.line(surface, self.color_bg_dark, rect.topleft, rect.topright - pygame.Vector2(2, 0), width=1)
         pygame.draw.line(surface, self.color_bg_dark, rect.topleft, rect.bottomleft - pygame.Vector2(0, 2), width=1)
 
-    def paint_holes(self, surface: Surface, pos: Tuple[int, int], ) -> Tuple[int, int]:
+    def paint_holes(self, surface: Surface, pos: Point) -> None:
         """
         Paint three contact holes at the specified position.
         Args:
             surface: The surface to draw on.
             pos: The position (x, y) for the contact.
         """
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7, 7))
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7 + 15, 7))
-        draw_hole(surface, self.color_bg_light, pos + pygame.Vector2(7 + 30, 7))
+        x, y = pos
+        for hole in range(CONTACT_HOLES_PER_SIDE):
+            draw_hole(surface, self.color_bg_light,
+                      (x + CONTACT_HOLE_INSET + hole * SIZE, y + CONTACT_HOLE_INSET))
 
     # ------------------------------------------- Draw Sliders -------------------------------------------------
 
@@ -716,14 +759,17 @@ class Painter:
         Args:
             surface (pygame.Surface): The board surface to draw on.
         """
-        for n, x in enumerate(range(10 * 15, 10 * 15 + 10 * 7 * 15, 7 * 15)):
+        for n in range(CONTACT_GRID_COLUMNS):
+            x = (SLIDER_START_COL + 1 + n * CONTROL_COLUMN_STEP) * SIZE
             self.paint_slider_top(surface, x)
             self.paint_slider_bottom(surface, x)
 
-            draw_text3d(surface, self.color_bg_light, f'{n}', 28, (x + 30, 850))
+            draw_text3d(surface, self.color_bg_light, f'{n}', max(1, scaled_pixel(28)),
+                        (x + 2 * SIZE, scaled_pixel(850)))
 
             # Hole for button
-        pygame.draw.rect(surface, (0, 0, 0), (31, 824, *self.size_button), width=0)
+        button_slot = (BUTTON_COL * SIZE + scaled_pixel(1), BUTTON_ROW * SIZE - scaled_pixel(1))
+        pygame.draw.rect(surface, (0, 0, 0), (*button_slot, *self.size_button), width=0)
 
     def paint_slider_top(self, surface: pygame.Surface, x: int) -> None:
         """
@@ -733,15 +779,17 @@ class Painter:
             surface (pygame.Surface): The surface to draw on.
             x (int): X-coordinate for the slider position.
         """
-        for x1 in [x - 6, x + 12]:
-            y = 285
-            pygame.draw.rect(surface, (0, 0, 0), (x1, y, 10, 28), width=0)
-            pygame.draw.rect(surface, self.color_button_medium, (x1 + 3, y, 7, 25), width=0)
-            pygame.draw.line(surface, self.color_bg_light, (x1 + 10, y), (x1 + 10, y) - pygame.Vector2(10, 0), width=1)
-            pygame.draw.line(surface, self.color_bg_light, (x1 + 10, y), (x1 + 10, y) + pygame.Vector2(0, 25), width=1)
+        y = 19 * SIZE
+        for x1 in [x - scaled_pixel(6), x + scaled_pixel(12)]:
+            pygame.draw.rect(surface, (0, 0, 0), (x1, y, scaled_pixel(10), scaled_pixel(28)))
+            pygame.draw.rect(surface, self.color_button_medium,
+                             (x1 + scaled_pixel(3), y, scaled_pixel(7), scaled_pixel(25)))
+            right = x1 + scaled_pixel(10)
+            pygame.draw.line(surface, self.color_bg_light, (right, y), (x1, y), width=1)
+            pygame.draw.line(surface, self.color_bg_light, (right, y), (right, y + scaled_pixel(25)), width=1)
 
-            draw_text3d(surface, self.color_bg_light, 'a', FONT_SIZE_A_B, (x - 20, y + 8))
-            draw_text3d(surface, self.color_bg_light, 'b', FONT_SIZE_A_B, (x + 24, y + 8))
+        draw_text3d(surface, self.color_bg_light, 'a', FONT_SIZE_A_B, (x - scaled_pixel(20), y + scaled_pixel(8)))
+        draw_text3d(surface, self.color_bg_light, 'b', FONT_SIZE_A_B, (x + scaled_pixel(24), y + scaled_pixel(8)))
 
     def paint_slider_bottom(self, surface: pygame.Surface, x: int) -> None:
         """
@@ -751,9 +799,11 @@ class Painter:
             surface (pygame.Surface): The surface to draw on.
             x (int): X-coordinate for the slider position.
         """
-        y = 780
-        pygame.draw.rect(surface, (0, 0, 0), (x, y, SIZE, 12 * SIZE + 14), width=0)
-        pygame.draw.rect(surface, self.color_button_medium, (x + 1, y + 1, 13, 7 * SIZE), width=0)
+        y = SLIDER_TRACK_ROW * SIZE
+        inset = max(1, scaled_pixel(1))
+        pygame.draw.rect(surface, (0, 0, 0), (x, y, SIZE, SIZE_PATCHBOARD[1] - y))
+        pygame.draw.rect(surface, self.color_button_medium,
+                         (x + inset, y + inset, SIZE - 2 * inset, 7 * SIZE))
 
     def paint_hud(self, surface: pygame.Surface) -> None:
         """

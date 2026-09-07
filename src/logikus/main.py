@@ -29,8 +29,7 @@ import sys
 
 import pygame
 
-import logikus
-from logikus.assets import load_icon
+from logikus.assets import load_icon, SIZE_PATCHBOARD
 from logikus.controller import Controller, STATE_QUITTING, STATE_REDRAWING
 from logikus.logic import Logic
 from logikus.ui import Ui
@@ -41,13 +40,13 @@ from logikus.ui import Ui
 def main(skin: str = "classic"):
     pygame.init()
 
-    window = pygame.Window("Spielcomputer LOGIKUS®", size=logikus.window_size)
+    window = pygame.Window("Spielcomputer LOGIKUS®", size=SIZE_PATCHBOARD)
     icon = load_icon()
     if icon is not None:
         window.set_icon(icon)
     screen = window.get_surface()
 
-    surface = pygame.Surface(logikus.window_size, pygame.SRCALPHA)
+    surface = pygame.Surface(SIZE_PATCHBOARD, pygame.SRCALPHA)
     logic = Logic()
     ui = Ui(surface, skin=skin, logic=logic)
 

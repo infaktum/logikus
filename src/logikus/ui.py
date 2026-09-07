@@ -38,6 +38,8 @@ import pygame
 from pygame import Surface, Rect
 
 from logikus.assets import Assets, Point, RGB, SIZE, SKINS, Skin, load_standard_font
+from logikus.assets import (LAMP_START_COL, LAMP_ROW, CONTROL_COLUMN_STEP, SLIDER_START_COL,
+                            SLIDER_ROW, SLIDER_TRAVEL, BUTTON_COL, BUTTON_ROW, CONTROL_DRAW_OFFSET)
 from logikus.logic import Logic, ON
 from logikus.wiring import Wiring, Wire, Contact
 
@@ -90,8 +92,8 @@ class Ui:
     color_picker: ColorPicker
     label: Surface
 
-    def __init__(self, surface: Surface, logic: Logic, skin: str | Skin = "classic", rows: int = 68, cols: int = 77,
-                 grid_size: int = 15) -> None:
+    def __init__(self, surface: Surface, logic: Logic, skin: str | Skin = "classic", rows: int = 62, cols: int = 77,
+                 grid_size: int = SIZE) -> None:
 
         """
         Initialize the UI for the Logikus emulator.
@@ -278,7 +280,7 @@ class Ui:
             col: Column position in the grid.
         """
         x, y = self.rc_to_xy(row, col)
-        contact = Contact(id_, x, y)
+        contact = Contact(id_, x, y, self.grid_size, self.grid_size)
         self.components[(row, col)] = contact
         self.contacts[contact.id] = contact
 
@@ -289,7 +291,7 @@ class Ui:
         Creates 10 sliders (S0-S9) and registers them in the components map.
         """
         for number in range(10):
-            col, row = 9 + 7 * number, 57
+            col, row = SLIDER_START_COL + CONTROL_COLUMN_STEP * number, SLIDER_ROW
             pos = self.rc_to_xy(row, col)
             slider = Slider(f'S{number}', self.assets.images['slider'], pos)
 
@@ -305,7 +307,7 @@ class Ui:
         Returns:
             Button: The initialized button instance.
         """
-        col, row = 2, 55
+        col, row = BUTTON_COL, BUTTON_ROW
         button = Button('T', self.assets.images['button'], self.rc_to_xy(row, col))
         for c in range(col, col + 3):
             for r in range(row, row + 7):
@@ -322,13 +324,14 @@ class Ui:
             self._update_lamp_images()
             return
         for l in range(10):
-            col = 7 + 7 * l
-            row = 0
+            col = LAMP_START_COL + CONTROL_COLUMN_STEP * l
+            row = LAMP_ROW
             image_on, image_off = (self.assets.images[f'L{l}_on'], self.assets.images[f'L{l}_off'])
             lamp = Lamp(f'L{l}', image_on, image_off, self.rc_to_xy(row, col))
             lamp.state = self.logic.lamps[lamp.name].state == ON
             self.lamps.append(lamp)
-            for c in range(col, col + 9):
+            lamp_columns = (image_on.get_width() + self.grid_size - 1) // self.grid_size
+            for c in range(col, col + lamp_columns):
                 for r in range(row, row + 10):
                     self.components[(r, c)] = lamp
 
@@ -946,7 +949,7 @@ class Slider:
         # rectangle shown in the 'off' position (base position)
         self._rect_off = self.image.get_rect(topleft=pos)
         # rectangle shown in the 'on' position (visual offset upwards)
-        self._rect_on = self.image.get_rect(topleft=(pos[0], pos[1] - 70))
+        self._rect_on = self.image.get_rect(topleft=(pos[0], pos[1] - SLIDER_TRAVEL))
         self.state = False
 
     @property
@@ -1028,7 +1031,7 @@ class Button:
         """
         if self.state:
             # slight visual offset when button is pressed
-            surface.blit(self.image, (self.rect.topleft[0] + 2, self.rect.topleft[1] - 2))
+            surface.blit(self.image, self.rect.move(*CONTROL_DRAW_OFFSET).topleft)
         else:
             surface.blit(self.image, self.rect.topleft)
 
@@ -1115,7 +1118,7 @@ class Lamp:
         Args:
             surface: The surface to draw the lamp on.
         """
-        surface.blit(self.image, (self.rect.topleft[0] + 2, self.rect.topleft[1] - 2))
+        surface.blit(self.image, self.rect.move(*CONTROL_DRAW_OFFSET).topleft)
 
     def __str__(self) -> str:
         """
