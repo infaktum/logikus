@@ -25,9 +25,10 @@ SOFTWARE.
 """
 
 import sys
-from importlib import resources
+from functools import lru_cache
+from io import BytesIO
 from pathlib import Path
-from typing import TypeAlias, Tuple
+from typing import TypeAlias, Tuple, TypedDict
 
 import pygame
 from pygame import Vector2, Surface
@@ -36,6 +37,17 @@ import logikus
 
 RGB: TypeAlias = tuple[int, int, int]
 Point: TypeAlias = tuple[int, int]
+
+
+class Skin(TypedDict):
+    """Colors used by the board, lamps and wire palette."""
+
+    bg: RGB
+    fg: RGB
+    lamp_on: RGB
+    lamp_off: RGB
+    wire: list[RGB]
+    live_wire: RGB
 
 # -------------------------------------------- Constants -------------------------------------------------
 
@@ -63,22 +75,22 @@ SIZE_BUTTON = (25, 70)
 
 # ---------------------------------------------- Skin Colors -------------------------------------------
 
-SKIN_CLASSIC = {'bg': (195, 175, 145), 'fg': (187, 68, 62), 'lamp_on': (244, 247, 225), 'lamp_off': (110, 45, 7),
+SKIN_CLASSIC: Skin = {'bg': (195, 175, 145), 'fg': (187, 68, 62), 'lamp_on': (244, 247, 225), 'lamp_off': (110, 45, 7),
                 'wire': [(50, 50, 200), (50, 150, 50), (200, 50, 50), (200, 50, 200), (50, 200, 200), (255, 255, 50),
                          (150, 150, 150), (50, 50, 50), (250, 250, 250)],
                 'live_wire': (0, 255, 0)}
-SKIN_HULK = {'bg': (50, 175, 50), 'fg': (190, 60, 190), 'lamp_on': (230, 90, 220), 'lamp_off': (190, 60, 190),
+SKIN_HULK: Skin = {'bg': (50, 175, 50), 'fg': (190, 60, 190), 'lamp_on': (230, 90, 220), 'lamp_off': (190, 60, 190),
              'wire': [(190, 60, 190)], 'live_wire': (230, 90, 220)}
-SKIN_MILITARY = {'bg': (88, 89, 68), 'fg': (107, 94, 59), 'lamp_on': (255, 255, 255), 'lamp_off': (30, 40, 30),
+SKIN_MILITARY: Skin = {'bg': (88, 89, 68), 'fg': (107, 94, 59), 'lamp_on': (255, 255, 255), 'lamp_off': (30, 40, 30),
                  'wire': [(107, 94, 59), (107, 94, 59), (107, 94, 59)], 'live_wire': (255, 255, 255)}
 
-SKIN_METAL = {'bg': (120, 120, 120), 'fg': (150, 150, 150), 'lamp_on': (150, 150, 150), 'lamp_off': (70, 70, 70),
+SKIN_METAL: Skin = {'bg': (120, 120, 120), 'fg': (150, 150, 150), 'lamp_on': (150, 150, 150), 'lamp_off': (70, 70, 70),
               'wire': [(20, 20, 20), (100, 100, 100), (180, 180, 180)], 'live_wire': (255, 255, 255)}
 
-SKIN_BW = {'bg': (240, 240, 240), 'fg': (20, 20, 20), 'lamp_on': (255, 255, 255), 'lamp_off': (50, 50, 50),
+SKIN_BW: Skin = {'bg': (240, 240, 240), 'fg': (20, 20, 20), 'lamp_on': (255, 255, 255), 'lamp_off': (50, 50, 50),
            'wire': [(20, 20, 20), (100, 100, 100), (180, 180, 180)], 'live_wire': (255, 255, 255)}
 
-SKINS = {"classic": SKIN_CLASSIC, "hulk": SKIN_HULK, "military": SKIN_MILITARY, "metal": SKIN_METAL, "bw": SKIN_BW}
+SKINS: dict[str, Skin] = {"classic": SKIN_CLASSIC, "hulk": SKIN_HULK, "military": SKIN_MILITARY, "metal": SKIN_METAL, "bw": SKIN_BW}
 
 # ----------------------------------------- Texts in menu -------------------------------------------------
 
@@ -134,6 +146,7 @@ class Assets:
         Creates both 'on' and 'off' states for each lamp using solid colored rectangles
         based on the current skin colors.
         """
+        self.insert: pygame.Surface | None = None
         for lamp in range(10):
             surface = pygame.Surface(SIZE_LAMP)
             surface.set_colorkey((255, 0, 255))
@@ -146,25 +159,41 @@ class Assets:
         Load lamp images from an external image file.
 
         Divides the loaded image into 10 equal parts horizontally and creates
-        lamp surfaces from each segment. Only creates 'on' state insert.
+        scaled lamp surfaces with both 'on' and 'off' states.
 
         Args:
             path (str): File path to the lamp image file.
         """
         insert = pygame.image.load(f'{path}').convert_alpha()
+        self.set_insert(insert)
+
+    def set_insert(self, insert: pygame.Surface) -> None:
+        """Scale ten segments to the lamp interior, trimming a two-pixel source border.
+
+        Images must be at least 50 x 5 pixels so every segment has an interior.
+        Only replace the current insert after all lamp images are ready.
+        """
         img_w, img_h = insert.get_size()
-        w = img_w // 10
+        if img_w < 50 or img_h < 5:
+            raise ValueError('Lamp insert must be at least 50 x 5 pixels (10 segments with a 2-pixel border).')
+        target_size = (SIZE_LAMP[0] - 4, SIZE_LAMP[1] - 4)
+        if min(target_size) <= 0:
+            raise ValueError('Lamp dimensions must exceed the 4-pixel total border.')
+        images = {}
 
         for l in range(10):
-            surface = pygame.Surface(SIZE_LAMP)
-            surface.set_colorkey((255, 0, 255))
-            surface.fill((255, 0, 255))
-            rect = pygame.Rect(2 + l * w, 2 + 0, w - 4, img_h - 4)
-            part = insert.subsurface(rect).copy()
-            surface.blit(part, (2, 2, w - 4, img_h - 4))
+            surface = pygame.Surface(SIZE_LAMP, pygame.SRCALPHA)
+            left, right = l * img_w // 10, (l + 1) * img_w // 10
+            rect = pygame.Rect(left + 2, 2, right - left - 4, img_h - 4)
+            part = insert.subsurface(rect)
+            surface.blit(pygame.transform.smoothscale(part, target_size), (2, 2))
             pygame.draw.rect(surface, (0, 0, 0), (1, 0, *SIZE_LAMP - pygame.Vector2(2, 0)), width=1)
-            self.images[f'L{l}_on'] = surface
-            self.images[f'L{l}_off'] = self.create_dark_insert(surface)
+            images[f'L{l}_on'] = surface
+            images[f'L{l}_off'] = self.create_dark_insert(surface)
+
+        # Keep the original image for lossless project saves, independently of its file.
+        self.images.update(images)
+        self.insert = insert
 
     def create_dark_insert(self, surface: pygame.Surface) -> pygame.Surface:
         """
@@ -307,10 +336,7 @@ def get_base_path() -> Path:
     return Path(__file__).resolve().parent
 
 
-BASE_PATH = get_base_path()
-
-
-def asset_path(*parts) -> Path:
+def asset_path(*parts: str) -> Path:
     """
     Construct a path to an asset file relative to the base path.
 
@@ -320,7 +346,7 @@ def asset_path(*parts) -> Path:
     Returns:
         Path: The complete path to the asset.
     """
-    return BASE_PATH.joinpath(*parts)
+    return get_base_path().joinpath(*parts)
 
 
 def font(name: str) -> Path:
@@ -333,7 +359,7 @@ def font(name: str) -> Path:
     Returns:
         Path: The full path to the font file.
     """
-    return asset_path(".", "fonts", name)
+    return asset_path("fonts", name)
 
 
 def image(name: str) -> Path:
@@ -346,19 +372,42 @@ def image(name: str) -> Path:
     Returns:
         Path: The full path to the image file.
     """
-    return asset_path("logikus", "images", name)
+    return asset_path("images", name)
+
+
+@lru_cache(maxsize=32)
+def _load_font(path: Path, size: int) -> pygame.font.Font:
+    """Cache fonts by resolved resource path and size."""
+    # Load into memory so cached fonts do not keep resource files locked on Windows.
+    loaded = pygame.font.Font(BytesIO(path.read_bytes()), size)
+    # Pygame consumes quit callbacks; register again when a new font is loaded.
+    pygame.register_quit(clear_font_cache)
+    return loaded
+
+
+def clear_font_cache() -> None:
+    """Release cached fonts before shutting down or restarting Pygame."""
+    _load_font.cache_clear()
 
 
 def load_standard_font(size: int) -> pygame.font.Font:
     """
-    Loads the standard font of the game with a given size from the package
+    Return the shared standard font at the requested size; do not mutate it.
     Args:
         size: The size of the font to be loaded.
 
     Returns: the font in the fonts directory
 
     """
-    return pygame.font.Font(font(logikus.font), size)
+    path = font(logikus.font)
+    cached = _load_font(path, size)
+    try:
+        cached.get_height()
+    except pygame.error:
+        # Also handle callers restarting only pygame.font rather than all Pygame.
+        clear_font_cache()
+        cached = _load_font(path, size)
+    return cached
 
 
 # -------------------------------------------- Painter -------------------------------------------------
@@ -527,10 +576,10 @@ class Painter:
 
             draw_text3d(surface, self.color_bg_light, letter, FONT_SIZE_ABC, (x, y))
 
-            draw_text3d(surface, self.color_bg_light, 'S', FONT_SIZE_S_T, (94, 840))
-            draw_text3d(surface, self.color_bg_light, 'T', FONT_SIZE_S_T, (40, 780))
-            draw_text3d(surface, self.color_bg_light, 'y', FONT_SIZE_X_Y, (94, 780))
-            draw_text3d(surface, self.color_bg_light, 'x', FONT_SIZE_X_Y, (94, 900))
+        draw_text3d(surface, self.color_bg_light, 'S', FONT_SIZE_S_T, (94, 840))
+        draw_text3d(surface, self.color_bg_light, 'T', FONT_SIZE_S_T, (40, 780))
+        draw_text3d(surface, self.color_bg_light, 'y', FONT_SIZE_X_Y, (94, 780))
+        draw_text3d(surface, self.color_bg_light, 'x', FONT_SIZE_X_Y, (94, 900))
 
     # ------------------------------------------- Paint Contacts -------------------------------------------------
 
@@ -688,20 +737,14 @@ class Painter:
         # pygame.draw.rect(surface, self.color_hud, (SIZE_PATCHBOARD[0] - w + 2, 0, w - 3, 10 * SIZE - 2), width=0)
 
 
-# ---------------------------------- Safe loading of windows icon fromm resources -----------------------
+# ---------------------------------- Window icon resource ---------------------------------------------
 
-def load_icon() -> None | pygame.Surface:
-    try:
-        icon_resource = resources.files("logikus.images").joinpath("icon.png")
-        if icon_resource.is_file():
-            with icon_resource.open("rb") as f:
-                return pygame.image.load(f)
-    except Exception:
-        pass
+def load_icon() -> pygame.Surface | None:
+    """Load the bundled icon through the same path resolver as fonts.
 
-    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
-    for path in (base / "images" / "icon.png", base / "logikus" / "images" / "icon.png"):
-        if path.is_file():
-            return pygame.image.load(str(path))
-
-    return None
+    A missing optional icon is allowed; invalid images report their load error.
+    """
+    path = image("icon.png")
+    if not path.is_file():
+        return None
+    return pygame.image.load(str(path))

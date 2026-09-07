@@ -66,6 +66,8 @@ class Controller:
 
         self.current_path = 'projects'
         self.active_component = None
+        self._button_mouse_held = False
+        self._button_keys_held: set[int] = set()
 
     # ------------------------------------------- Event Handling -------------------------------------------------
 
@@ -84,6 +86,17 @@ class Controller:
         Returns:
             int: State change result (STATE_IDLE, STATE_REDRAWING, etc.).
         """
+        # Releases must also be handled after moving outside the button or
+        # entering wiring mode while a keyboard button is held.
+        if event.type == pygame.WINDOWFOCUSLOST:
+            self._button_mouse_held = False
+            self._button_keys_held.clear()
+            self.logic.release_button()
+            return STATE_REDRAWING
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self._button_mouse_held:
+            return self.handle_mouse_button_event(event)
+        if event.type == pygame.KEYUP and event.key in self._button_keys_held:
+            return self.handle_key_event(event)
         if self.ui.mode == MODE_WIRING:
             return self.handle_event_wiring_mode(event)
         else:
@@ -246,6 +259,10 @@ class Controller:
             int: State change result.
         """
 
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self._button_mouse_held:
+            self._button_mouse_held = False
+            return self._update_button_input()
+
         if event.button == 3:  # Right mouse button resets any started action
             self.ui.wiring.path = None
             self.ui.mouse_position = None
@@ -299,13 +316,9 @@ class Controller:
             self.logic.move_slider(component.name)
             return STATE_REDRAWING
 
-        if isinstance(component, Button) and event.type == pygame.MOUSEBUTTONDOWN:
-            self.logic.push_button()
-            return STATE_REDRAWING
-
-        if isinstance(component, Button) and event.type == pygame.MOUSEBUTTONUP:
-            self.logic.release_button()
-            return STATE_REDRAWING
+        if isinstance(component, Button) and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self._button_mouse_held = True
+            return self._update_button_input()
 
         if isinstance(component, Lamp) and event.type == pygame.MOUSEBUTTONDOWN:
             path = dialog_choose_file("Loading insert for lamps...", default_path=self.current_path)
@@ -429,6 +442,14 @@ class Controller:
     SPECIAL_EVENTS = [pygame.K_p, pygame.K_l, pygame.K_g, pygame.K_z, pygame.K_r]
     CTRL_EVENTS = [pygame.K_s, pygame.K_l, pygame.K_n, pygame.K_q]
 
+    def _update_button_input(self) -> int:
+        """Keep the button pressed until all mouse/keyboard inputs are released."""
+        if self._button_mouse_held or self._button_keys_held:
+            self.logic.push_button()
+        else:
+            self.logic.release_button()
+        return STATE_REDRAWING
+
     def handle_key_event(self, event: Event) -> int:
         """
         Handle keyboard events for various shortcuts and controls.
@@ -460,12 +481,14 @@ class Controller:
 
         # Pressing and releasing the button
         if key in self.BUTTON_EVENTS and event_type == pygame.KEYDOWN:
-            self.logic.push_button()
-            return STATE_REDRAWING
+            self._button_keys_held.add(key)
+            return self._update_button_input()
 
         if key in self.BUTTON_EVENTS and event_type == pygame.KEYUP:
-            self.logic.release_button()
-            return STATE_REDRAWING
+            if key in self._button_keys_held:
+                self._button_keys_held.remove(key)
+                return self._update_button_input()
+            return STATE_IDLE
 
         # Special events like screenshots
         if key in self.SPECIAL_EVENTS:

@@ -150,19 +150,18 @@ class Logic:
         """
         return "Sliders:\t" + ''.join(slider.position for slider in self.sliders.values())
 
-    def __repr__(self) -> None:
+    def __repr__(self) -> str:
         """
-        Print lamp and slider states to the console (keeps original behavior).
+        Print lamp and slider states.
         """
-        print(self.lamp_states())
-        print(self.slider_states())
+        return self.lamp_states() + '\n' + self.slider_states()
 
     def __str__(self) -> str:
         """
         Return a string describing the full state of the Logikus instance.
 
         Returns:
-            str: A multi-line string listing lamps, sliders and programming-field connections.
+            str: A multi-line string listing lamps, sliders, and programming-field connections.
         """
         s = 'Lamps:\n' + ', '.join(str(lamp) for lamp in self.lamps.values())
         s += '\nSwitches:\n' + ','.join(str(slider) for slider in self.sliders.values())

@@ -42,7 +42,9 @@ def main(skin: str = "classic"):
     pygame.init()
 
     window = pygame.Window("Spielcomputer LOGIKUS®", size=logikus.window_size)
-    window.set_icon(load_icon())
+    icon = load_icon()
+    if icon is not None:
+        window.set_icon(icon)
     screen = window.get_surface()
 
     surface = pygame.Surface(logikus.window_size, pygame.SRCALPHA)

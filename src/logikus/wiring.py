@@ -256,12 +256,12 @@ class Wiring:
                 return wire
         return None
 
-    def wire_between(self, contact1: Contact, contact2: Contact) -> Wire:
+    def wire_between(self, contact1: str, contact2: str) -> Wire | None:
         """
         Find a wire connecting two contacts by their base names.
 
         Searches for a wire where either end has the specified contact names.
-        Comparison is done using the 'name' property (base name before '-').
+        Comparison uses the 'name' property (base name before the hole's '.').
 
         Args:
             contact1 (str): Base name of first contact (e.g. 'L0').
