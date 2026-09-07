@@ -28,6 +28,23 @@ from __future__ import annotations
 from typing import Tuple, List
 
 
+REFERENCE_GRID_SIZE = 15  # .lkw waypoint coordinates always use this grid.
+
+
+def convert_grid_point(point: tuple[int, int], source_size: int, target_size: int) -> tuple[int, int]:
+    """Map a point's cell to the integer center of the same cell in another grid.
+
+    Using cell indices instead of a pixel scale factor prevents rounding drift
+    when converting between odd and even grid sizes. Non-centered input points
+    snap to the center of their containing cell.
+    """
+    if source_size <= 0 or target_size <= 0:
+        raise ValueError('Grid sizes must be positive.')
+    x, y = point
+    return (x // source_size * target_size + target_size // 2,
+            y // source_size * target_size + target_size // 2)
+
+
 # -------------------------------------------- Contact -------------------------------------------------
 
 class Contact:
@@ -175,12 +192,16 @@ class Wire:
         self.path = []
         self.active = False
 
-    def write(self) -> str:
+    def write(self, grid_size: int = REFERENCE_GRID_SIZE) -> str:
         """
         Serialize the wire to a human-readable string format.
 
         Includes the start and end contact IDs, and the intermediate path points
-        (excluding start and end points).
+        (excluding start and end points). Waypoints are stored at cell centers
+        in the fixed 15-pixel reference grid without changing the live path.
+
+        Args:
+            grid_size: Pixel size of the current UI grid, defaulting to 15.
 
         Returns:
             str: Wire description in format 'start_id-end_id : (x1,y1) - (x2,y2) - ...'
@@ -188,7 +209,9 @@ class Wire:
         end_id = self.end.id if self.end is not None else 'None'
         text = f'{self.start.id}-{end_id} {self.color}'
         if self.path and len(self.path) > 2:
-            text += (' : ' + ' - '.join(f'({x},{y})' for x, y in self.path[1:-1]))
+            points = (convert_grid_point(point, grid_size, REFERENCE_GRID_SIZE)
+                      for point in self.path[1:-1])
+            text += (' : ' + ' - '.join(f'({x},{y})' for x, y in points))
         return text
 
     def __eq__(self, other: object) -> bool:

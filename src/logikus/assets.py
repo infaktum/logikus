@@ -28,7 +28,7 @@ import sys
 from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
-from typing import TypeAlias, Tuple, TypedDict
+from typing import TypeAlias, TypedDict
 
 import pygame
 from pygame import Vector2, Surface
@@ -52,10 +52,14 @@ class Skin(TypedDict):
 
 # -------------------------------------------- Constants -------------------------------------------------
 
-# Defines the pixel size of the grid. All positions and sizes are computed relative to this
-SIZE = 11  # logikus.grid_size
+# Defines the pixel size of the grid. All positions and sizes are computed relative to this value.
+# Use an odd number like 11 or 15, so that the contacts can be centered in the grid. The reference size is
+# 15 pixels grid size.
 
-def scaled_pixel(reference: int) -> int:
+SIZE = logikus.grid_size
+
+
+def scale(reference: float) -> int:
     """Scale original artwork pixels from the 15-pixel reference grid."""
     return round(reference * SIZE / 15)
 
@@ -70,20 +74,20 @@ CONTROL_COLUMN_STEP = 7
 SLIDER_START_COL = 9
 SLIDER_ROW = 57
 SLIDER_TRACK_ROW = 52
-SLIDER_TRAVEL = scaled_pixel(70)
+SLIDER_TRAVEL = scale(70)
 BUTTON_COL = 2
 BUTTON_ROW = 55
-CONTROL_DRAW_OFFSET = (scaled_pixel(2), -scaled_pixel(2))
+CONTROL_DRAW_OFFSET = (scale(2), -scale(2))
 
 SIZE_PATCHBOARD = (77 * SIZE, 62 * SIZE)
 SIZE_LAMP = (7 * SIZE, 10 * SIZE)
 
-FONT_SIZE_MENU = int(1.2 * SIZE)
-FONT_SIZE_KOSMOS = int(2.5 * SIZE)
-FONT_SIZE_ABC = int(1.8 * SIZE)
-FONT_SIZE_A_B = int(1.2 * SIZE)
-FONT_SIZE_S_T = int(2.1 * SIZE)
-FONT_SIZE_X_Y = int(1.3 * SIZE)
+FONT_SIZE_MENU = scale(18)
+FONT_SIZE_KOSMOS = scale(38)
+FONT_SIZE_ABC = scale(28)
+FONT_SIZE_A_B = scale(18)
+FONT_SIZE_S_T = scale(32)
+FONT_SIZE_X_Y = scale(18)
 
 # Contact layout: board positions and spacing are expressed in grid cells.
 CONTACT_GRID_ORIGIN = (8 * SIZE, 21 * SIZE)
@@ -552,18 +556,18 @@ class Painter:
         Returns:
             pygame.Surface: Slider surface with 3D appearance and texture.
         """
-        slider = pygame.Surface((self.size_slider[0] + scaled_pixel(10), self.size_slider[1]))
+        slider = pygame.Surface((self.size_slider[0] + scale(10), self.size_slider[1]))
 
         slider.set_colorkey((255, 255, 255))
         slider.fill((255, 255, 255))
-        rect = pygame.Rect(scaled_pixel(4), 0, *self.size_slider)
+        rect = pygame.Rect(scale(4), 0, *self.size_slider)
 
-        slider.fill(self.color_button_medium, (scaled_pixel(5), 0, *self.size_slider))
+        slider.fill(self.color_button_medium, (scale(5), 0, *self.size_slider))
 
-        groove_step = max(1, scaled_pixel(5))
+        groove_step = max(1, scale(5))
         for y in range(groove_step, rect.h, groove_step):
             pygame.draw.line(slider, self.color_button_dark, (rect.left, y), (rect.right, y),
-                             width=max(1, scaled_pixel(2)))
+                             width=max(1, scale(2)))
             pygame.draw.line(slider, self.color_button_light, (rect.left, y - 1), (rect.right, y - 1), width=1)
 
         pygame.draw.line(slider, self.color_button_dark, rect.topleft, rect.bottomleft, width=2)
@@ -590,9 +594,9 @@ class Painter:
 
         # Draw button in "off" state
 
-        edge_width = max(1, scaled_pixel(2))
+        edge_width = max(1, scale(2))
         button.fill(self.color_button_medium, (0, edge_width, rect.w - edge_width, rect.h))
-        for y in range(scaled_pixel(8), rect.h, max(1, scaled_pixel(5))):
+        for y in range(scale(8), rect.h, max(1, scale(5))):
             pygame.draw.line(button, self.color_button_dark, (0, y), (rect.right, y), width=edge_width)
             pygame.draw.line(button, self.color_button_light, (0, y - 1), (rect.right, y - 1), width=1)
 
@@ -601,7 +605,7 @@ class Painter:
         pygame.draw.line(button, self.color_button_light, rect.topleft + pygame.Vector2(0, edge_width),
                          rect.topright + pygame.Vector2(0, edge_width), width=edge_width)
         pygame.draw.line(button, (0, 0, 0), rect.topright + pygame.Vector2(-1, 0),
-                          rect.bottomright + pygame.Vector2(-1, 0), width=max(1, scaled_pixel(3)))
+                         rect.bottomright + pygame.Vector2(-1, 0), width=max(1, scale(3)))
 
         return button
 
@@ -764,11 +768,11 @@ class Painter:
             self.paint_slider_top(surface, x)
             self.paint_slider_bottom(surface, x)
 
-            draw_text3d(surface, self.color_bg_light, f'{n}', max(1, scaled_pixel(28)),
-                        (x + 2 * SIZE, scaled_pixel(850)))
+            draw_text3d(surface, self.color_bg_light, f'{n}', max(1, scale(28)),
+                        (x + 2 * SIZE, scale(850)))
 
             # Hole for button
-        button_slot = (BUTTON_COL * SIZE + scaled_pixel(1), BUTTON_ROW * SIZE - scaled_pixel(1))
+        button_slot = (BUTTON_COL * SIZE + scale(1), BUTTON_ROW * SIZE - scale(1))
         pygame.draw.rect(surface, (0, 0, 0), (*button_slot, *self.size_button), width=0)
 
     def paint_slider_top(self, surface: pygame.Surface, x: int) -> None:
@@ -780,16 +784,16 @@ class Painter:
             x (int): X-coordinate for the slider position.
         """
         y = 19 * SIZE
-        for x1 in [x - scaled_pixel(6), x + scaled_pixel(12)]:
-            pygame.draw.rect(surface, (0, 0, 0), (x1, y, scaled_pixel(10), scaled_pixel(28)))
+        for x1 in [x - scale(6), x + scale(12)]:
+            pygame.draw.rect(surface, (0, 0, 0), (x1, y, scale(10), scale(28)))
             pygame.draw.rect(surface, self.color_button_medium,
-                             (x1 + scaled_pixel(3), y, scaled_pixel(7), scaled_pixel(25)))
-            right = x1 + scaled_pixel(10)
+                             (x1 + scale(3), y, scale(7), scale(25)))
+            right = x1 + scale(10)
             pygame.draw.line(surface, self.color_bg_light, (right, y), (x1, y), width=1)
-            pygame.draw.line(surface, self.color_bg_light, (right, y), (right, y + scaled_pixel(25)), width=1)
+            pygame.draw.line(surface, self.color_bg_light, (right, y), (right, y + scale(25)), width=1)
 
-        draw_text3d(surface, self.color_bg_light, 'a', FONT_SIZE_A_B, (x - scaled_pixel(20), y + scaled_pixel(8)))
-        draw_text3d(surface, self.color_bg_light, 'b', FONT_SIZE_A_B, (x + scaled_pixel(24), y + scaled_pixel(8)))
+        draw_text3d(surface, self.color_bg_light, 'a', FONT_SIZE_A_B, (x - scale(20), y + scale(8)))
+        draw_text3d(surface, self.color_bg_light, 'b', FONT_SIZE_A_B, (x + scale(24), y + scale(8)))
 
     def paint_slider_bottom(self, surface: pygame.Surface, x: int) -> None:
         """
@@ -800,7 +804,7 @@ class Painter:
             x (int): X-coordinate for the slider position.
         """
         y = SLIDER_TRACK_ROW * SIZE
-        inset = max(1, scaled_pixel(1))
+        inset = max(1, scale(1))
         pygame.draw.rect(surface, (0, 0, 0), (x, y, SIZE, SIZE_PATCHBOARD[1] - y))
         pygame.draw.rect(surface, self.color_button_medium,
                          (x + inset, y + inset, SIZE - 2 * inset, 7 * SIZE))

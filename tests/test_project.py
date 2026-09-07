@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault('SDL_VIDEODRIVER', 'dummy')
 os.environ.setdefault('SDL_AUDIODRIVER', 'dummy')
@@ -28,6 +29,33 @@ class ProjectTests(unittest.TestCase):
 
     def make_ui(self):
         return Ui(pygame.Surface((1155, 930)), Logic())
+
+    def test_menu_hit_areas_match_visible_items(self):
+        ui = self.make_ui()
+        for item in ui.menu.items:
+            for y in range(item.rect.top, item.rect.bottom):
+                with self.subTest(item=item.name, y=y):
+                    self.assertIs(ui.component_at_xy((item.rect.centerx, y)), item)
+
+    def test_click_open_loads_other_project_without_overwriting_it(self):
+        ui = self.make_ui()
+        controller = Controller(ui.surface, ui, ui.logic)
+        with TemporaryDirectory() as tmp:
+            old_path, new_path = Path(tmp) / 'old', Path(tmp) / 'new'
+            ui.label_names = ['new project']
+            ui.save_project(new_path)
+            ui.label_names = ['old project']
+            ui.save_project(old_path)
+            controller.current_path = str(old_path)
+            before = {p.name: p.read_bytes() for p in new_path.iterdir()}
+            item = next(item for item in ui.menu.items if item.name == 'Open')
+            ui.menu.visible = True
+            with patch('logikus.controller.dialog_choose_dir', return_value=str(new_path)) as choose:
+                controller.handle_event(pygame.event.Event(
+                    pygame.MOUSEBUTTONDOWN, button=1, pos=item.rect.center))
+            self.assertEqual(choose.call_args.args[0], 'Open project...')
+            self.assertEqual(ui.label_names, ['new project'])
+            self.assertEqual({p.name: p.read_bytes() for p in new_path.iterdir()}, before)
 
     def make_insert(self, path):
         image = pygame.Surface((1050, 150), pygame.SRCALPHA)

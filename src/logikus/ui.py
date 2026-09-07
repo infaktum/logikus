@@ -41,7 +41,7 @@ from logikus.assets import Assets, Point, RGB, SIZE, SKINS, Skin, load_standard_
 from logikus.assets import (LAMP_START_COL, LAMP_ROW, CONTROL_COLUMN_STEP, SLIDER_START_COL,
                             SLIDER_ROW, SLIDER_TRAVEL, BUTTON_COL, BUTTON_ROW, CONTROL_DRAW_OFFSET)
 from logikus.logic import Logic, ON
-from logikus.wiring import Wiring, Wire, Contact
+from logikus.wiring import Wiring, Wire, Contact, REFERENCE_GRID_SIZE, convert_grid_point
 
 # --------------------------------------------- States -------------------------------------------------
 
@@ -345,9 +345,11 @@ class Ui:
                 zip(["New", "Open", "Save", "Quit"], ["menu_new", "menu_open", "menu_save", "menu_quit"])):
             item = MenuItem(name, self.assets.images[image], (self.grid_size, (2 * n + 1) * self.grid_size))
             self.menu.add_item(item)
-            for c in range(0, 7):
-                self.components[(2 * n + 0, c + 1)] = item
-                self.components[(2 * n + 1, c + 1)] = item
+            for row in range(item.rect.top // self.grid_size,
+                             (item.rect.bottom - 1) // self.grid_size + 1):
+                for col in range(item.rect.left // self.grid_size,
+                                 (item.rect.right - 1) // self.grid_size + 1):
+                    self.components[(row, col)] = item
 
     def init_active_color_box(self) -> ColorPicker:
         """
@@ -703,10 +705,7 @@ class Ui:
         Returns:
             Point: Snapped grid position.
         """
-        x, y = pos
-        grid_x = (x // self.grid_size) * self.grid_size + self.grid_size // 2
-        grid_y = (y // self.grid_size) * self.grid_size + self.grid_size // 2
-        return grid_x, grid_y
+        return convert_grid_point(pos, self.grid_size, self.grid_size)
 
     # -------------------------------------------- Saving and Loading -------------------------------------------------
 
@@ -719,6 +718,7 @@ class Ui:
         removes an existing insert file. The three writes are not transactional.
         Labels use semicolons as separators and must not contain separators or
         line breaks. The skin and switch states are not stored.
+        Wire waypoints are saved as cell centers in the 15-pixel reference grid.
 
         Args:
             path: Project directory, created if necessary.
@@ -731,7 +731,7 @@ class Ui:
         directory.mkdir(parents=True, exist_ok=True)
         with (directory / 'wiring.lkw').open('w', encoding='utf-8') as f:
             for wire in self.wiring.wires:
-                f.write(f'{wire.write()}\n')
+                f.write(f'{wire.write(self.grid_size)}\n')
         (directory / 'labels.txt').write_text(';'.join(self.label_names) + '\n', encoding='utf-8')
         insert_path = directory / 'insert.png'
         if self.assets.insert is not None:
@@ -816,6 +816,9 @@ class Ui:
         e.g. ``Q.0-L0.0 2``. Missing colors default to zero. Missing files are
         ignored. Blank lines and malformed records are not accepted.
         Existing wires are retained and lamp states are not recomputed.
+        Waypoints are interpreted in the 15-pixel reference grid (including
+        legacy files) and mapped to cell centers of the current UI grid.
+        Endpoints are taken directly from the current contact positions.
 
         Args:
             path_str: Path to the wiring file.
@@ -845,7 +848,8 @@ class Ui:
                     if path_text:
                         for point in path_text.split('-'):
                             x, y = point.strip().strip('()').split(',')
-                            wire.path.append((int(x), int(y)))
+                            wire.path.append(convert_grid_point((int(x), int(y)),
+                                                                REFERENCE_GRID_SIZE, self.grid_size))
                     if end_contact:
                         wire.path.append(end_contact.center)
                     else:

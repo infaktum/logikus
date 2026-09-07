@@ -24,7 +24,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import argparse
 import sys
 
 import pygame
@@ -74,18 +73,3 @@ def main(skin: str = "classic"):
                     screen.blit(surface, (0, 0))
                     window.flip()
         clock.tick(30)
-
-
-# ------------------------------------------- Entry Point -------------------------------------------------
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Start Logikus with selectable skin")
-    parser.add_argument(
-        "--skin",
-        default="classic",
-        choices=['classic', 'hulk', 'metal', 'bw'],
-        help="Skin name (default: classic)"
-    )
-    args = parser.parse_args()
-
-    main(args.skin)

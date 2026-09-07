@@ -56,6 +56,8 @@ Start the emulator with
 python -m logikus
 ````
 
+Set the grid size in pixels with `python -m logikus --size 11` (default: `15`).
+
 ## The Interface
 
 The interface consists of a graphical representation of the Logikus board, including:
