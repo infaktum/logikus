@@ -191,7 +191,7 @@ class Wire:
             text += (' : ' + ' - '.join(f'({x},{y})' for x, y in self.path[1:-1]))
         return text
 
-    def __eq__(self, other: Wire) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Check equality between two wires.
 
@@ -204,6 +204,9 @@ class Wire:
         Returns:
             bool: True if both wires connect the same contacts, False otherwise.
         """
+        if not isinstance(other, Wire):
+            return False
+
         return (self.start == other.start and self.end == other.end) or (
                 self.start == other.end and self.end == other.start)
 
