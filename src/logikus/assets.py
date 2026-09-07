@@ -52,7 +52,7 @@ class Skin(TypedDict):
 
 # -------------------------------------------- Constants -------------------------------------------------
 
-SIZE = logikus.grid_size
+SIZE = 11  # logikus.grid_size
 
 SIZE_SLIDER = (35, 75)
 SIZE_BUTTON = (35, 95)
@@ -66,6 +66,35 @@ FONT_SIZE_ABC = 26
 FONT_SIZE_A_B = 18
 FONT_SIZE_S_T = 32
 FONT_SIZE_X_Y = 20
+
+# Contact layout: board positions and spacing are expressed in grid cells.
+CONTACT_GRID_ORIGIN = (8 * SIZE, 21 * SIZE)
+CONTACT_GRID_COLUMNS = 10
+CONTACT_GRID_ROWS = 10
+CONTACT_COLUMN_SPACING = 7 * SIZE
+CONTACT_ROW_SPACING = 3 * SIZE
+CONTACT_BLOCK_SIZE = (5 * SIZE, 3 * SIZE)
+CONTACT_HOLES_PER_SIDE = 3
+CONTACT_HOLE_INSET = SIZE // 2
+
+# Local artwork rectangles are relative to a contact block's top-left corner.
+# Small pixel insets preserve the original bevel and slot appearance.
+CONTACT_SLOT_RECT = (SIZE + 1, SIZE + 3, 3 * SIZE - 2, SIZE - 4)
+CONTACT_BRIDGE_RECT = (SIZE + 11, SIZE + 5, 3 * SIZE - 20, SIZE - 10)
+CONTACT_SLOT_COLOR: RGB = (0, 0, 0)
+
+LAMP_CONTACT_ORIGIN = (9 * SIZE, 12 * SIZE)
+LAMP_CONTACT_COUNT = 10
+CONTACT_LABEL_FONT_SIZE = 16
+LAMP_CONTACT_LABEL_OFFSET = (-SIZE - 1, -SIZE - 3)
+POWER_CONTACT_POSITION = (SIZE, 12 * SIZE)
+POWER_CONTACT_LABEL_OFFSET = (3 * SIZE, -SIZE - 3)
+
+BUTTON_CONTACT_POSITIONS = (('Ta', (SIZE, 21 * SIZE)), ('Tb', (SIZE, 28 * SIZE)))
+BUTTON_CONTACT_FRAME_RECT = (5, 20 * SIZE, 5 * SIZE + 5, 14 * SIZE)
+BUTTON_CONTACT_FRAME_WIDTH = 2
+BUTTON_CONTACT_LABEL_FONT_SIZE = 22
+BUTTON_CONTACT_LABEL_OFFSET = (SIZE - 2, 2 * SIZE + 10)
 
 """
 SIZE = 11  # 15  # 15
@@ -596,40 +625,44 @@ class Painter:
         Args:
             surface (pygame.Surface): The board surface to draw on.
         """
-        for x in range(120, 120 + 10 * 105, 105):
-            for y in range(315, 17 * 45, 45):
-                rect = pygame.Rect(x, y, 5 * SIZE, 3 * SIZE)
+        origin_x, origin_y = CONTACT_GRID_ORIGIN
+        for column in range(CONTACT_GRID_COLUMNS):
+            x = origin_x + column * CONTACT_COLUMN_SPACING
+            for row in range(CONTACT_GRID_ROWS):
+                y = origin_y + row * CONTACT_ROW_SPACING
+                rect = pygame.Rect((x, y), CONTACT_BLOCK_SIZE)
                 draw_rect_3d(surface, self.color_bg_dark, self.color_bg_light, rect)
-                draw_hole(surface, self.color_bg_light, rect.topleft + pygame.Vector2(7, 7))
-                draw_hole(surface, self.color_bg_light, rect.topleft + pygame.Vector2(7, 7 + SIZE))
-                draw_hole(surface, self.color_bg_light, rect.topleft + pygame.Vector2(7, 7 + 30))
-                draw_hole(surface, self.color_bg_light, rect.topright + pygame.Vector2(-7, 7))
-                draw_hole(surface, self.color_bg_light, rect.topright + pygame.Vector2(-7, 7 + SIZE))
-                draw_hole(surface, self.color_bg_light, rect.topright + pygame.Vector2(-7, 7 + 30))
+                for hole in range(CONTACT_HOLES_PER_SIDE):
+                    hole_y = rect.top + CONTACT_HOLE_INSET + hole * SIZE
+                    draw_hole(surface, self.color_bg_light, (rect.left + CONTACT_HOLE_INSET, hole_y))
+                    draw_hole(surface, self.color_bg_light, (rect.right - CONTACT_HOLE_INSET, hole_y))
 
-                pygame.draw.rect(surface, (0, 0, 0), (x + 16, y + 18, 3 * 15 - 2, 15 - 4), width=0)
-                pygame.draw.rect(surface, self.color_button_medium, (x + 16 + 10, y + 20, 3 * 15 - 20, 15 - 10),
-                                 width=0)
+                pygame.draw.rect(surface, CONTACT_SLOT_COLOR, pygame.Rect(CONTACT_SLOT_RECT).move(x, y))
+                pygame.draw.rect(surface, self.color_button_medium, pygame.Rect(CONTACT_BRIDGE_RECT).move(x, y))
 
-        # Lamp contacts at y=180
-        for n, x in enumerate(range(9 * 15, 9 * 15 + 10 * 7 * 15, 7 * 15)):
-            y = 180
+        lamp_x, lamp_y = LAMP_CONTACT_ORIGIN
+        for n in range(LAMP_CONTACT_COUNT):
+            x, y = lamp_x + n * CONTACT_COLUMN_SPACING, lamp_y
             self.paint_contact(surface, (x, y))
-
-            draw_text3d(surface, self.color_bg_light, f'L{n}', 16, (x - 16, y - 18))
+            label_x, label_y = LAMP_CONTACT_LABEL_OFFSET
+            draw_text3d(surface, self.color_bg_light, f'L{n}', CONTACT_LABEL_FONT_SIZE,
+                        (x + label_x, y + label_y))
 
         # Contacts of power source and button
-        self.paint_contact(surface, (15, 180))
-        draw_text3d(surface, self.color_bg_light, 'Q', 16, (60, 180 - 18))
+        self.paint_contact(surface, POWER_CONTACT_POSITION)
+        power_x, power_y = POWER_CONTACT_POSITION
+        label_x, label_y = POWER_CONTACT_LABEL_OFFSET
+        draw_text3d(surface, self.color_bg_light, 'Q', CONTACT_LABEL_FONT_SIZE,
+                    (power_x + label_x, power_y + label_y))
 
-        draw_rect_3d(surface, self.color_bg_dark, self.color_bg_light, pygame.Rect(5, 300, 5 * 15 + 5, 14 * 15),
-                     width=2)
+        draw_rect_3d(surface, self.color_bg_dark, self.color_bg_light, pygame.Rect(BUTTON_CONTACT_FRAME_RECT),
+                     width=BUTTON_CONTACT_FRAME_WIDTH)
 
-        self.paint_contact_mirrored(surface, (15, 315))
-        draw_text3d(surface, self.color_bg_light, 'Ta', 22, (28, 315 + 40))
-
-        self.paint_contact_mirrored(surface, (15, 420))
-        draw_text3d(surface, self.color_bg_light, 'Tb', 22, (28, 420 + 40))
+        label_x, label_y = BUTTON_CONTACT_LABEL_OFFSET
+        for name, (x, y) in BUTTON_CONTACT_POSITIONS:
+            self.paint_contact_mirrored(surface, (x, y))
+            draw_text3d(surface, self.color_bg_light, name, BUTTON_CONTACT_LABEL_FONT_SIZE,
+                        (x + label_x, y + label_y))
 
     def paint_contact(self, surface: pygame.Surface, pos: Point) -> None:
         """
