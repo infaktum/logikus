@@ -138,8 +138,7 @@ tbd.
 All source code files are located in the `logikus` package. The main files are:
 
 - `assets.py`- Creation of the graphics for Logikus. All graphics are generated programmatically. A skin may be chosen
-  by
-- specifying the `--skin option at startup. The default skin is the "classic" Logikus look.
+  by specifying the `--skin option at startup. The default skin is the "classic" Logikus look.
 - `controller.py` — input handling for keyboard and mouse.
 - `logic.py` — the underlying logic for simulating the Logikus behavior. Contains the path finding algorithm for
   determining which lamps should light up based on the current wire configuration and slider/button states.
@@ -200,10 +199,7 @@ programmatically, which allows for easy customization and the ability to create 
 ## Todos
 
 - Write a small tutorial for using the emulator and understanding the logic of the Logikus.
-
-- Implement real project management.
 - Implement history undo/redo for wire editing.
-- Implement better import for lamp graphics.
-- Implement smaller board versions.
-- Add more skins and customization options.
+
+
 
