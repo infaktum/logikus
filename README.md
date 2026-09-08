@@ -4,11 +4,11 @@
 [![pygame 2](https://img.shields.io/badge/pygame-2-brightgreen)](https://www.pygame.org/news)
 [![License: MIT](https://img.shields.io/github/license/infaktum/logikus)](LICENSE)
 
-![Logikus_Box.jpg](docs/images/Logikus_Box.jpg)
+![Logikus_Box.jpg](docs/images/banner.jpg)
 
-The **Spielcomputer LOGIKUS** (*Toy Computer Logikus*) was an educational toy produced by the German
-company **Kosmos**. It was designed to teach children the basics of logical circuits and programming-style thinking
-using switches, wires and lamps. To be frank, it was neither a toy nor a computer in the modern sense (or maybe *any*
+The **Spielcomputer LOGIKUS** (*Toy Computer Logikus*) was an educational toy produced by the German company **Kosmos**.
+It was designed to teach children the basics of logical circuits and programming-style thinking using switches, wires
+and lamps. To be frank, it was neither a toy nor a computer in the modern sense (or maybe *any*
 sense), but rather a simple logic puzzle device that allowed users to create and test various logical configurations.
 The device featured a board with contact points, wires to connect them, and lamps that would light up based on the
 connections made.
@@ -113,9 +113,8 @@ load wire configurations, different skins for the board, and a hidden menu for a
 
 - If a lamp is lit, you may make the connections to it visible by hovering the mouse cursor over the lamp - the
   connecting wires turn to a bright color. This allows you to see how the *electricity flow* from the start contact `Q`
-  to the lamp,
-  which can be helpful for understanding the logic of your configuration. Note: Only one of the connections to the lamp
-  is highlighted, even if there are multiple paths to the lamp.
+  to the lamp, which can be helpful for understanding the logic of your configuration. Note: Only one of the connections
+  to the lamp is highlighted, even if there are multiple paths to the lamp.
 -
 
 ![LogikusHighlight.jpg](docs/user_guide/images/LogikusHighlight.jpg)
@@ -175,8 +174,8 @@ sent it to plastic heaven.
 
 You see the Logikus with the dark hub removed, which covers the small light bulbs. You could insert transparent paper
 strips for different projects. If you look closely enough, you can see the small wire which connects one pole of the
-battery to all the light bulbs. The battery is located on the rear of the board in the top left corner. Its other
-pole is connected to the source contact `Q`.
+battery to all the light bulbs. The battery is located on the rear of the board in the top left corner. Its other pole
+is connected to the source contact `Q`.
 
 Based on this photo, I created the graphics for the emulation, which was a fun exercise in itself. I wanted to capture
 the look and feel of the original Logikus as closely as possible, while also making it visually appealing and easy to
