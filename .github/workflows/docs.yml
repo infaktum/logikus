@@ -41,7 +41,9 @@ jobs:
       - name: Copy images to    docs
         run: |
           mkdir -p docs/images
-          cp -r images/* docs/images/ 
+          if [ -d images ]; then
+            cp -r images/. docs/images/
+          fi
 
       - name: Generate API docs with sphinx-apidoc
         run: |
