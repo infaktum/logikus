@@ -30,7 +30,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     parser = argparse.ArgumentParser(prog="logikus", description="Start Logikus - Toy Computer Emulation")
     parser.add_argument("--skin", "-s", default="classic", help="Skin name: classic, hulk, metal, (default: classic)")
-    parser.add_argument("--size", type=int, default=15, help="Grid size in pixels (default: 15)")
+    parser.add_argument("--size", type=int, default=15, help="Grid size in pixels (default: 13)")
     args = parser.parse_args(list(argv))
     if args.size <= 0:
         parser.error("--size must be a positive integer")

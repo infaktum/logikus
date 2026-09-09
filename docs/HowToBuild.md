@@ -1,7 +1,7 @@
 # Building the documentation
 
-This folder contains Sphinx sources for the project's documentation. The
-following steps show how to build the HTML documentation locally.
+This folder contains Sphinx sources for the project's documentation. The following steps show how to build the HTML
+documentation locally.
 
 Prerequisites
 -------------
@@ -19,8 +19,7 @@ Install required packages
 
 Generate API rst files (optional)
 --------------------------------
-If you added or changed modules under `src/`, regenerate the API rst files
-with sphinx-apidoc:
+If you added or changed modules under `src/`, regenerate the API rst files with sphinx-apidoc:
 
 ````
 sphinx-apidoc -o docs/api src/logikus --force --separate --module-first
@@ -44,6 +43,6 @@ python -m http.server --directory docs/_build/html 8000
 Notes
 -----
 
-- `docs/conf.py` adds `../src` to the Python path so Sphinx can import the  `pypublib` package.
+- `docs/conf.py` adds `../src` to the Python path so Sphinx can import the  `logikus` package.
 - If you change docstrings, run the build again to refresh the HTML output.
 
